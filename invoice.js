@@ -186,6 +186,11 @@ function updateInvoice(row) {
       }
     }
 
+     
+     grist.onRecord(record => {
+  console.log(record.price); // colonne ajoutée par moi pour tester le debug
+});
+     
     // Add some guidance about columns.
     const want = new Set(Object.keys(addDemo({})));
     const accepted = new Set(['References']);
@@ -277,3 +282,5 @@ ready(function() {
     updateInvoice({});
   }
 });
+
+
