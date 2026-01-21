@@ -11,7 +11,7 @@ grist.onRecord(async (record) => {
     const mapped = grist.mapColumnNames(record);
 
     if (mapped) {
-        // Si les colonnes ont bien été mappées,
+        // Si les colonnes ont bien été mappées, --> aider avec un message d'erreur?
        
     } else {
         // Sinon, on affiche un message d'erreur dans la console
