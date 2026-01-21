@@ -10,40 +10,38 @@ function ready(fn) {
  * Demo is only shown when the row has no Issued or Due date.
  */
 function addDemo(row) {
-  if (!('Issued' in row) && !('Due' in row)) {
-    for (const key of ['Number', 'Issued', 'Due']) {
+  if (!('order_date' in row) && !('Due' in row)) {
+    for (const key of ['order_id', 'order_date', 'Due']) {
       if (!(key in row)) { row[key] = key; }
     }
-    for (const key of ['Subtotal', 'Deduction', 'Taxes', 'Total']) {
+    for (const key of ['Subtotal', 'Deduction', 'Taxes', 'order_sales_sum_final']) {
       if (!(key in row)) { row[key] = key; }
     }
     if (!('Note' in row)) { row.Note = '(Anything in a Note column goes here)'; }
   }
   if (!row.Invoicer) {
     row.Invoicer = {
-      Name: 'Invoicer.Name',
-      Street1: 'Invoicer.Street1',
-      Street2: 'Invoicer.Street2',
-      City: 'Invoicer.City',
-      State: '.State',
-      Zip: '.Zip',
-      Email: 'Invoicer.Email',
-      Phone: 'Invoicer.Phone',
-      Website: 'Invoicer.Website'
+      Name: 'La Ferme Chautems sàrl',
+      Street1: '1 ch. du Champ du Boeuf',
+      City: 'Lugnorre',
+      Zip: '1789',
+      Email: 'info@lafermechautems.ch',
+      Phone: ' 076 693 52 98',
+      Website: 'lafermechautems.ch'
     }
   }
-  if (!row.Client) {
-    row.Client = {
-      Name: 'Client.Name',
-      Street1: 'Client.Street1',
+  if (!row.customer) {
+    row.customer = {
+      Name: 'customer.customer',
+      Street1: 'customer.street',
       Street2: 'Client.Street2',
-      City: 'Client.City',
+      City: 'customer.city',
       State: '.State',
-      Zip: '.Zip'
+      Zip: 'customer.postal_code'
     }
   }
-  if (!row.Items) {
-    row.Items = [
+  if (!row.order_sales) {
+    row.order_sales = [
       {
         Description: 'Items[0].Description',
         Quantity: '.Quantity',
@@ -71,8 +69,8 @@ const data = {
 };
 let app = undefined;
 
-Vue.filter('currency', formatNumberAsUSD)
-function formatNumberAsUSD(value) {
+Vue.filter('currency', formatNumberAsCHF)
+function formatNumberAsCHF(value) {
   if (typeof value !== "number") {
     return value || '—';      // falsy value would be shown as a dash.
   }
@@ -80,7 +78,7 @@ function formatNumberAsUSD(value) {
   value = (value === -0 ? 0 : value);       // Avoid negative zero.
 
   const result = value.toLocaleString('en', {
-    style: 'currency', currency: 'USD'
+    style: 'currency', currency: 'CHF'
   })
   if (result.includes('NaN')) {
     return value;
@@ -95,13 +93,27 @@ Vue.filter('fallback', function(value, str) {
   return value;
 });
 
+
+
+
 Vue.filter('asDate', function(value) {
   if (typeof(value) === 'number') {
     value = new Date(value * 1000);
   }
-  const date = moment.utc(value)
-  return date.isValid() ? date.format('MMMM DD, YYYY') : value;
+  const date = moment.utc(value);
+  return date.isValid() ? date.format('dddd, DD MMMM YYYY') : value;
 });
+
+
+
+Vue.filter('asDateJS', function(value) {
+  if (typeof(value) === 'number') {
+    value = new Date(value * 1000);
+  }
+  const date = dayjs(value);
+  return date.isValid() ? date.locale('fr').format('dddd, DD MMMM YYYY') : value;
+});
+
 
 function tweakUrl(url) {
   if (!url) { return url; }
@@ -154,8 +166,8 @@ function updateInvoice(row) {
     // Add some guidance about columns.
     const want = new Set(Object.keys(addDemo({})));
     const accepted = new Set(['References']);
-    const importance = ['Number', 'Client', 'Items', 'Total', 'Invoicer', 'Due', 
-                        'Issued', 'Subtotal', 'Deduction', 'Taxes', 'Note', 'Paid'];
+    const importance = ['order_ID', 'customer', 'order_sales', 'Total', 'Invoicer', 'Due', 
+                        'order_date', 'Subtotal', 'Deduction', 'Taxes', 'Note', 'Paid'];
     if (!('Due' in row || 'Issued' in row)) {
       const seen = new Set(Object.keys(row).filter(k => k !== 'id' && k !== '_error_'));
       const help = row.Help = {};
@@ -177,9 +189,9 @@ function updateInvoice(row) {
       }
     }
     addDemo(row);
-    if (!row.Subtotal && !row.Total && row.Items && Array.isArray(row.Items)) {
+    if (!row.Subtotal && !row.Total && row.order_sales && Array.isArray(row.order_sales)) {
       try {
-        row.Subtotal = row.Items.reduce((a, b) => a + b.Price * b.Quantity, 0);
+        row.Subtotal = row.order_sales.reduce((a, b) => a + b.unit_price * b.quantity, 0);
         row.Total = row.Subtotal + (row.Taxes || 0) - (row.Deduction || 0);
       } catch (e) {
         console.error(e);
