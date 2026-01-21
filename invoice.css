@@ -191,7 +191,7 @@ div.summary::after {
 }
 
 .thanks {
-  text-align: right;
+  text-align: center;
   color: #92ab4e;
   font-size: 200%;
 }
