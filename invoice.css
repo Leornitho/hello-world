@@ -191,9 +191,9 @@ div.summary::after {
 }
 
 .thanks {
-  text-align: center;
+  text-align: left;
   color: #92ab4e;
-  font-size: 200%;
+  font-size: 300%;
 }
 
 div.instructions, .newlined, p.note {
