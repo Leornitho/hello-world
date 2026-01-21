@@ -1,3 +1,42 @@
+grist.ready({
+   columns:  ['ID_Commande', 'Client', 'Detail', 'Total', 'Date_commande_facture']
+});
+
+grist.onRecord(async (record) => {
+    // On récupère les colonnes mappées
+    const mapped = grist.mapColumnNames(record);
+
+    if (mapped) {
+        // Si les colonnes ont bien été mappées,
+        // on affiche les valeurs de nos colonnes dans nos éléments html
+        document.getElementById('order_id').innerText = mapped.ID_Commande;
+        document.getElementById('customer').innerText = mapped.Client;
+        document.getElementById('oder_sales').innerText = mapped.Detail;
+        document.getElementById('order_sales_sum_final').innerText = mapped.Total;
+        document.getElementById('order_date').innerText = mapped.Date_commande_facture;
+    } else {
+        // Sinon, on affiche un message d'erreur dans la console
+        console.error("Toutes les colonnes n'ont pas été mappées.");
+    }
+});
+
+
+grist.onRecord(async (record) => {
+    // On récupère les colonnes mappées
+    const mapped = grist.mapColumnNames(record);
+
+    if (mapped) {
+        // Si les colonnes ont bien été mappées,
+        // on affiche les valeurs de nos colonnes dans nos éléments html
+        document.getElementById('nom').innerText = mapped.Nom;
+        document.getElementById('adresse').innerText = mapped.Adresse;
+    } else {
+        // Sinon, on affiche un message d'erreur dans la console
+        console.error("Toutes les colonnes n'ont pas été mappées.");
+    }
+});
+
+
 function ready(fn) {
   if (document.readyState !== 'loading'){
     fn();
