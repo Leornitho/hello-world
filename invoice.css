@@ -6,7 +6,7 @@ body {
 }
 
 a {
-  color: #0000EE;
+  color: #0000EE; 
 }
 
 .invoice {
@@ -16,7 +16,7 @@ a {
 }
 
 .meta {
-  color: #ff8000;
+  color: #92AB4E;
 }
 
 .header .title {
@@ -37,7 +37,7 @@ a {
 }
 
 .supplier {
-  color: #4682B4;
+  //color: #92AB4E; // Couleur du texte de l'adresse du fournisseur
   display: block;
 }
 
@@ -50,7 +50,7 @@ a {
   padding: 1px;
   margin-top: 1em;
   margin-bottom: 1em;
-  background: #ff8000;
+  background: #92AB4E; //couleur principale des boites (#ff8000 = orange, #92AB4E = vert LFC)
   -webkit-print-color-adjust: exact !important;
   color-adjust: exact !important;
 }
@@ -316,4 +316,16 @@ div.column-name {
   margin-bottom: 1px;
   border-radius: 0.25em;
 }
+
+.logo-container {
+  width: 100%;
+  text-align: center;
+  margin-bottom: 10px;
+}
+
+.logo {
+  max-width: 200px;   /* ajuste la taille */
+  max-height: 200px;
+}
+
 
