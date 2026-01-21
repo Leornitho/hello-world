@@ -1,8 +1,8 @@
 grist.ready({
    columns:  ['ID_Commande',
               'Client',
-              {name:"Detail", type="Ref", description:"Liste des objets à afficher le détail"},
-              {name:'Total', optional : true}
+              'Detail',
+              'Total',
               'Date_commande_facture']
 });
 
