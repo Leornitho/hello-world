@@ -21,22 +21,6 @@ grist.onRecord(async (record) => {
 });
 
 
-grist.onRecord(async (record) => {
-    // On récupère les colonnes mappées
-    const mapped = grist.mapColumnNames(record);
-
-    if (mapped) {
-        // Si les colonnes ont bien été mappées,
-        // on affiche les valeurs de nos colonnes dans nos éléments html
-        document.getElementById('nom').innerText = mapped.Nom;
-        document.getElementById('adresse').innerText = mapped.Adresse;
-    } else {
-        // Sinon, on affiche un message d'erreur dans la console
-        console.error("Toutes les colonnes n'ont pas été mappées.");
-    }
-});
-
-
 function ready(fn) {
   if (document.readyState !== 'loading'){
     fn();
