@@ -19,15 +19,15 @@ function addDemo(row) {
     }
     if (!('Note' in row)) { row.Note = '(Anything in a Note column goes here)'; }
   }
-  if (!row.Invoicer) {
-    row.Invoicer = {
-      Name: 'La Ferme Chautems sàrl',
-      Street1: '1 ch. du Champ du Boeuf',
-      City: 'Lugnorre',
-      Zip: '1789',
-      Email: 'info@lafermechautems.ch',
-      Phone: ' 076 693 52 98',
-      Website: 'lafermechautems.ch'
+ if (!row.store) {
+    row.store = {
+      store_official_name: 'La Ferme Chautems sàrl',
+      street: '1 ch. du Champ du Boeuf',
+      city: 'Lugnorre',
+      postal_code: '1789',
+      email: 'info@lafermechautems.ch',
+      phone: ' 076 693 52 98',
+      website: 'lafermechautems.ch'
     }
   }
   if (!row.customer) {
