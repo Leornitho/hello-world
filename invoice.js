@@ -1,25 +1,3 @@
-grist.ready({
-   columns:  ['ID_Commande',
-              'Client',
-              'Detail',
-              'Total',
-              'Date_commande_facture']
-});
-
-grist.onRecord(async (record) => {
-    // On récupère les colonnes mappées
-    const mapped = grist.mapColumnNames(record);
-
-    if (mapped) {
-        // Si les colonnes ont bien été mappées, --> aider avec un message d'erreur?
-       
-    } else {
-        // Sinon, on affiche un message d'erreur dans la console
-        console.error("Toutes les colonnes n'ont pas été mappées.");
-    }
-});
-
-
 function ready(fn) {
   if (document.readyState !== 'loading'){
     fn();
