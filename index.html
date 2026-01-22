@@ -134,7 +134,7 @@
                 <th class="number">Quantité</th>
                 <th class="money">Total</th>
               </tr>
-              <tr v-for="item in mapped.Detail">
+              <tr v-for="item in invoice.order_sales">
                 <td> {{ item.product_format_clientside }}</td> <!-- je n'arrive pas à aller plus loin dans les tables/sous tables, raccourci utilisé sans référence sur $product_format_clientside -->
                 <td class="money">{{item.unit_price_final.toFixed(2)}} {{ item.UI_price_format}}</td>
                 <td class="number">{{ item.quantity }}</td>
