@@ -43,25 +43,25 @@
       <div class="invoice" v-if="invoice">
         <template v-if="invoice">
           <div class="top">
-            <div class="supplier">
+           <div class="supplier">
               <div v-for="business in (invoice.store ? [invoice.store] : [])"> <!-- Pourrait être pratique un jour pour changer l'adresse qui apparait (Atelier de Mag vs La Ferme Chautems) -->
                 <template v-if="typeof(business) === 'string'">
                   <div class="address newlined">{{ business }}</div>
                 </template>
                 <template v-else>
                   <div class="address">
-                    <span class="name">{{ business.store }}</span><br> <!-- Ici va repecher les valeurs par défaut indiquées dans le js -->
+                    <span class="name">{{ business.store_official_name }}</span><br> <!-- Ici va repecher les valeurs par défaut indiquées dans le js -->
                     {{ business.street }}<br>
                     {{ business.city }} {{ business.postal_code }}
                   </div>
-                  <template v-if="business.Email">
-                    <div class="email">{{ business.Email }}</div>
+                  <template v-if="business.email">
+                    <div class="email">{{ business.email }}</div>
                   </template>
-                  <template v-if="business.Phone">
-                    <div class="phone">{{ business.Phone }}</div>
+                  <template v-if="business.phone">
+                    <div class="phone">{{ business.phone }}</div>
                   </template>
-                  <template v-if="business.Website">
-                    <div class="website"><a v-bind:href="business.Url">{{ business.Website }}</a></div>
+                  <template v-if="business.website">
+                    <div class="website"><a v-bind:href="business.Url">{{ business.website }}</a></div>
                   </template>
                 </template>
               </div>
