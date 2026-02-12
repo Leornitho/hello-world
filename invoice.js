@@ -6,20 +6,21 @@ function ready(fn) {
   }
 }
 
+
 /**
- * Demo is only shown when the row has no Issued or Due date.
+ *  Demo is only shown when the row has no Issued or Due date!
  */
-function addDemo(row) {
+function addDemo(row) { // Allows to give default values if the data isn't complete. Returns row
   if (!('order_date' in row) && !('Due' in row)) {
-    for (const key of ['order_id', 'order_date', 'Due']) {
+    for (const key of ['order_id', 'order_date']) { //Avant, on avait aussi 'Due' dans cette liste de key, pour avoir une date d'échéance.
       if (!(key in row)) { row[key] = key; }
     }
-    for (const key of ['Subtotal', 'Deduction', 'Taxes', 'order_sales_sum_final']) {
+    for (const key of ['Deduction', 'order_sales_sum_final']) { //Aussi "Subtotal" comme key ici. Deduction pourrait être utilisé pour afficher le rabais client?
       if (!(key in row)) { row[key] = key; }
     }
-    if (!('Note' in row)) { row.Note = '(Anything in a Note column goes here)'; }
+    if (!('client_note' in row)) { row.client_note = '(Anything in a Note column goes here)'; }
   }
- if (!row.store) {
+  if (!row.store) {
     row.store = {
       store_official_name: 'La Ferme Chautems sàrl',
       street: '1 ch. du Champ du Boeuf',
@@ -32,27 +33,28 @@ function addDemo(row) {
   }
   if (!row.customer) {
     row.customer = {
-      Name: 'customer.customer',
-      Street1: 'customer.street',
-      Street2: 'Client.Street2',
-      City: 'customer.city',
-      State: '.State',
-      Zip: 'customer.postal_code'
+      company_name: 'Client sympa',
+      street: 'Une jolie rue',
+      house_number: '111',
+      city: 'Ville',
+      State: '.State', // n'est pas utilisé
+      postal_code: 'XXXX'
     }
   }
-  if (!row.order_sales) {
-    row.order_sales = [
+  if (!row.details) {
+    row.details = [
       {
-        Description: 'Items[0].Description',
-        Quantity: '.Quantity',
-        Total: '.Total',
-        Price: '.Price',
+        product_format: 'Pas darticle dispo',
+        product_format_clientside: 'problem',
+        quantity: 'Quantité démo',
+        total_price_final: 'prix demo',
+        unit_price_final: '.prix unité démo',
       },
       {
-        Description: 'Items[1].Description',
-        Quantity: '.Quantity',
-        Total: '.Total',
-        Price: '.Price',
+        product_format: 'Items[1].Description',
+        quantity: '.Quantity démo',
+        total_price_final: 'prix demo',
+        unit_price_final: '.Price unité  démo',
       },
     ];
   }
@@ -95,17 +97,6 @@ Vue.filter('fallback', function(value, str) {
 
 
 
-
-Vue.filter('asDate', function(value) {
-  if (typeof(value) === 'number') {
-    value = new Date(value * 1000);
-  }
-  const date = moment.utc(value);
-  return date.isValid() ? date.format('dddd, DD MMMM YYYY') : value;
-});
-
-
-
 Vue.filter('asDateJS', function(value) {
   if (typeof(value) === 'number') {
     value = new Date(value * 1000);
@@ -131,7 +122,7 @@ function handleError(err) {
   console.log(data);
 }
 
-function prepareList(lst, order) {
+function prepareList(lst, order) { // Sert uniquement à afficher l'aide (Colones souhaitées, reconnues, manquantes etc)
   if (order) {
     let orderedLst = [];
     const remaining = new Set(lst);
@@ -148,7 +139,23 @@ function prepareList(lst, order) {
   return lst;
 }
 
-function updateInvoice(row) {
+
+//Fonction principale, appelée sur onRecord
+function updateInvoice(row, mapping) {
+
+console.log('before');
+ console.log(JSON.stringify(row));
+ console.log('mapped')
+const mapped = grist.mapColumnNames(row, mapping)
+console.log(JSON.stringify(mapped))
+ //row = grist.mapColumnNames(row, mapping) || row; // On doit reassigner uniquement ce qui a été mappé, pas tout remplacer
+ // var mapped_keys = Object.keys(mapped);
+
+console.log('after');
+ console.log(JSON.stringify(row));
+
+let row_donnees = ''
+
   try {
     data.status = '';
     if (row === null) {
@@ -158,21 +165,22 @@ function updateInvoice(row) {
     if (row.References) {
       try {
         Object.assign(row, row.References);
+        
       } catch (err) {
         throw new Error('Could not understand References column. ' + err);
       }
     }
 
      
-     grist.onRecord(record => {
-  console.log(record.price); // colonne ajoutée par moi pour tester le debug
-});
+
      
     // Add some guidance about columns.
-    const want = new Set(Object.keys(addDemo({})));
-    const accepted = new Set(['References']);
-    const importance = ['order_ID', 'customer', 'order_sales', 'Total', 'Invoicer', 'Due', 
-                        'order_date', 'Subtotal', 'Deduction', 'Taxes', 'Note', 'Paid'];
+    const want = new Set(Object.keys(addDemo({}))); // Tout ce que nous donnons comme données dans addDemo (voir ci-dessous est "wanted" dans le invoice)
+    const accepted = new Set(['References']); // ??
+    const importance = ['order_ID', 'customer', 'details', 'Total', 'Invoicer', 'Due', 
+                        'order_date', 'Subtotal', 'Deduction', 'Taxes', 'Note', 'Paid']; // Sert uniquement à donner un ordre dans le helper
+    
+    
     if (!('Due' in row || 'Issued' in row)) {
       const seen = new Set(Object.keys(row).filter(k => k !== 'id' && k !== '_error_'));
       const help = row.Help = {};
@@ -193,39 +201,63 @@ function updateInvoice(row) {
         row.SuggestReferencesColumn = true;
       }
     }
+
     addDemo(row);
-    if (!row.Subtotal && !row.Total && row.order_sales && Array.isArray(row.order_sales)) {
+
+   /* if (!row.order_sales_sum_final && row.details && Array.isArray(row.details)) {
       try {
-        row.Subtotal = row.order_sales.reduce((a, b) => a + b.unit_price * b.quantity, 0);
-        row.Total = row.Subtotal + (row.Taxes || 0) - (row.Deduction || 0);
+        row.order_sales_sum_final = row.Subtotal - (row.Deduction || 0);
       } catch (e) {
         console.error(e);
       }
-    }
-    if (row.Invoicer && row.Invoicer.Website && !row.Invoicer.Url) {
-      row.Invoicer.Url = tweakUrl(row.Invoicer.Website);
+    } */ // Inutile pour nous
+
+    // Pour transformer l'adresse web en url valide (http: ..)
+    if (row.store && row.store.website && !row.store.Url) {
+      row.store.Url = tweakUrl(row.store.website);
     }
 
     // Fiddle around with updating Vue (I'm not an expert).
     for (const key of want) {
-      Vue.delete(data.invoice, key);
+      Vue.delete(data.invoice, key); // Pourquoi ça ???
     }
     for (const key of ['Help', 'SuggestReferencesColumn', 'References']) {
       Vue.delete(data.invoice, key);
     }
+
+
     data.invoice = Object.assign({}, data.invoice, row);
+    
+    console.log(JSON.stringify(row));
+    console.log(JSON.stringify(row.details[0]));
+
 
     // Make invoice information available for debugging.
     window.invoice = row;
-  } catch (err) {
+    
+  } catch (err) { // Catch = Quoi faire si le gros bloc au-dessus (try) renvoie une exception
     handleError(err);
   }
 }
 
+
+
 ready(function() {
   // Update the invoice anytime the document data changes.
-  grist.ready();
-  grist.onRecord(updateInvoice);
+  
+  
+  grist.ready({ // On est obligé de mapper TOUTES les colonnes utiles dans le widget (grist core code)
+   columns:  [{name: 'order_id', type: 'Text'},
+              {name: 'order_sales_sum_final'},
+              {name: 'order_date', type: 'Date'},
+              {name:'store', type:"Ref"},
+              {name: 'customer', type: "Ref"},
+              {name: 'details', type:"RefList"},
+              {name: 'References'}]
+}); // Pour dire à Grist que c'est prêt. Avant: sans les options
+  
+  grist.onRecord(updateInvoice);  //Crée tout le tsouin tsouin à balancer au HTML, à chaque évenement "onRecord"
+
 
   // Monitor status so we can give user advice.
   grist.on('message', msg => {
@@ -259,5 +291,3 @@ ready(function() {
     updateInvoice({});
   }
 });
-
-
