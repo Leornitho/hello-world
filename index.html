@@ -1,8 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    
-   <meta charset="utf-8">
+    <meta charset="utf-8">
     <title>Grist Invoice</title>
 
     <!-- A template for showing an invoice in a Custom Widget in Grist. -->
@@ -12,38 +11,22 @@
     <script src="https://docs.getgrist.com/grist-plugin-api.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/dayjs@1/locale/fr.js"></script> <!-- tentative pour mieux formatter la date en français-->
-    <script src="invoice.js"></script> <!-- anciennement: invoice.js?ver=11 -->
+
     <script src="exampleData.js"></script>
 
-    <link rel="stylesheet" href="invoice.css"> <!-- anciennement: invoice.css?ver=17 -->
+    <link rel="stylesheet" href="https://leornitho.github.io/invoices_and_orders/invoice.css"> <!-- On garde tout le CSS depuis github -->
   </head>
+
+
+
   <body>
     <div id="app">
-      <!-- Première partie si nos données ne sont pas prêtes = irrelevant pour nous -->
-      <div class="status" v-if="status">
-        <template v-if="status === 'waiting'">
-          <p>Waiting for data...</p>
-          <ul>
-            <li v-bind:class="[tableConnected ? 'done' : '']">I need <b>read table</b> access.</li>
-            <li v-bind:class="[haveRows ? 'done' : '']">I need at least one row of data.</li>
-            <li v-bind:class="[rowConnected ? 'done' : '']">I need <b>Select By</b> set.</li>
-          </ul>
-          <p>Examples:</p>
-          <ul>
-            <li><a class="button" href="index.html?demo=1">A filled out invoice</a></li>
-            <li><a class="button" href="index.html?labels=1">A labelled invoice</a></li>
-          </ul>
-        </template>
-        <template v-else>
-          {{ status }}
-        </template>
-      </div>
-
-      <!-- Ici commence la rédaction du BL à proprement parler-->
       <div class="invoice" v-if="invoice">
         <template v-if="invoice">
+
+
           <div class="top">
-           <div class="supplier">
+            <div class="supplier">
               <div v-for="business in (invoice.store ? [invoice.store] : [])"> <!-- Pourrait être pratique un jour pour changer l'adresse qui apparait (Atelier de Mag vs La Ferme Chautems) -->
                 <template v-if="typeof(business) === 'string'">
                   <div class="address newlined">{{ business }}</div>
@@ -51,7 +34,7 @@
                 <template v-else>
                   <div class="address">
                     <span class="name">{{ business.store_official_name }}</span><br> <!-- Ici va repecher les valeurs par défaut indiquées dans le js -->
-                    {{ business.street }}<br>
+                    {{ business.street }} {{business.house_number}}<br>
                     {{ business.city }} {{ business.postal_code }}
                   </div>
                   <template v-if="business.email">
@@ -81,61 +64,58 @@
               <!--<div class="header">
                 <div class="meta title">Bulletin de livraison</div>
               </div> TITRE PRINCIPAL-->
-              <div class="info"><span class="meta">Commande</span> {{ invoice.order_ID}}</div>
+              <div class="info"><span class="meta">Commande</span> {{ invoice.order_id}}</div>
               <div class="info" v-if="invoice.order_date"><div class="meta date-tag">Bulletin de livraison du</div> {{ invoice.order_date | asDateJS }}</div>
-              <div class="info" v-if="invoice.Due"><div class="meta date-tag">Due</div> {{ invoice.Due | asDate }}</div>
             </div>
 
 
-          <div class="client" v-for="business in (invoice.customer ? [invoice.customer] : [])">
+          <div class="client" v-for="customer in (invoice.customer ? [invoice.customer] : [])">
             <div class="title">Client</div>
             <div class="details">
-              <template v-if="typeof(business) === 'string'">
-                <div class="newlined">{{ business }}</div>  <!-- utile uniquement si "customer" n'est pas une référence mais juste du texte? -->
+              <template v-if="typeof(customer) === 'string'">
+                <div class="newlined">{{ business }}</div>
               </template>
+              
               <template v-else>
-                <!--   <div>{{ business.customer }}</div> POUR AFFICHER DANS TOUS LES CAS LE $customer --> 
-                <template v-if="business.name"> <!-- permet d'afficher un élément QUE si il existe -->
-                  {{ business.name }}<br>
+                <!--   <div>{{ customer.customer }}</div> POUR AFFICHER DANS TOUS LES CAS LE $customer --> 
+                <template v-if="customer.name"> <!-- permet d'afficher un élément QUE si il existe -->
+                  {{ customer.name }}<br>
                 </template>
-                <template v-if="business.company_name">
-                  {{ business.company_name }}
+                <template v-if="customer.company_name">
+                  {{ customer.company_name }}
                 </template>
-                <template v-if="business.street">
-                  <br>{{ business.street }}
+                <template v-if="customer.street">
+                  <br>{{ customer.street }}
                 </template>
-                <template v-if="business.house_number">
-                  {{ business.house_number }}
+                <template v-if="customer.house_number">
+                  {{ customer.house_number }}
                 </template>
-                <br>{{ business.city }} {{ business.postal_code }}
-                <template v-if="business.Country">
-                  <br />{{ business.Country }}
-                </template>
+                <br>{{ customer.city }} {{ customer.postal_code }}
               </template>
             </div>
           </div>
        </div>
 
           <table class="items">
-            <template v-if="!Array.isArray(invoice.order_sales)">
+            <template v-if="!Array.isArray(invoice.detailed_sales)">
               <tr>
                 <th>Produit problème</th>
                 <th class="money">Total</th>
               </tr>
               <tr>
-                <td>{{ invoice.order_sales }}</td>
+                <td>{{ invoice.detailed_sales }}</td>
                 <td class="money">{{ invoice.order_sales_sum_final | currency }}</td>
               </tr>
             </template>
-            <template v-else>
+            <template v-else> <!-- Ceci est le template qui nous concerne -->
               <tr>
                 <th>Produit</th>
                 <th class="money">Prix</th>
                 <th class="number">Quantité</th>
                 <th class="money">Total</th>
               </tr>
-              <tr v-for="item in invoice.order_sales">
-                <td> {{ item.product_format_clientside }}</td> <!-- je n'arrive pas à aller plus loin dans les tables/sous tables, raccourci utilisé sans référence sur $product_format_clientside -->
+              <tr v-for="item in invoice.detailed_sales">
+                <td> {{ item.product_format_clientside }}</td> <!-- je n'arrive pas à aller plus loin. dans les tables/sous tables, raccourci utilisé sans référence sur .product_format_clientside -->
                 <td class="money">{{item.unit_price_final.toFixed(2)}} {{ item.UI_price_format}}</td>
                 <td class="number">{{ item.quantity }}</td>
                 <td class="money">{{ item.total_price_final | currency}}</td>
@@ -167,41 +147,6 @@
             <p class="note">{{ invoice.client_note }}</p>
           </template>
 
-          <template v-for="help in (invoice.Help ? [invoice.Help] : [])">
-            <div class="help">
-              <div class="help-close">
-                Add <span class="column-name">Due</span> or <span class="column-name">Issued</span> date to hide this help.
-              </div>
-              <div class="title">Column information</div>
-              <div class="details">
-                <table>
-                  <tr v-for="group in ['recognized', 'expected', 'ignored']">
-                    <td class="key">{{ group }}</td>
-                    <td>
-                      <template v-if="group in help">
-                        <div v-bind:class="['column-name', 'column-' + group]" v-for="col in help[group]">{{col}}</div>
-                      </template>
-                      <template v-else>
-                        &mdash;
-                      </template>
-                    </td>
-                  </tr>
-                </table>
-                <template v-if="invoice.SuggestReferencesColumn">
-                  <div>For structured address and item information, add a <span class="column-name">References</span> column with this formula:</div>
-                  <div>
-                    <pre>RECORD(rec, expand_refs=1)</pre>
-                  </div>
-                </template>
-              </div>
-            </div>
-          </template>
-          <template v-if="invoice.Paid">
-            <div class="paid">
-              PAID
-            </div>
-          </template>
-
           <div class="footer">
             <div class="thanks">
               Merci pour votre commande!
@@ -211,6 +156,7 @@
           <div class="print">
             <a href="javascript:window.print()">Print</a>
           </div>
+
         </template>
       </div>
     </div>
