@@ -171,8 +171,18 @@ div.summary::after {
   margin-right: 0.5em;
 }
 */
+.website {
+  display: flex;
+  align-items: center;
+}
 
-.website::before {
+.website-icon {
+  width: 16px;
+  height: 16px;
+  margin-right: 0.5em;
+}
+
+/* .website::before {
   content: "";
   display: inline-block;
   width: 16px;
@@ -183,8 +193,7 @@ div.summary::after {
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
-}
-
+} */
 .email::before {
   content: "\2709";
   margin-right: 0.5em;  
