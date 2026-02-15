@@ -179,7 +179,7 @@ div.summary::after {
   height: 16px;
   margin-right: 0.5em;
 
-  background-image: url("https://github.com/Leornitho/invoices_and_orders/blob/main/Plantule_FINAL.png"); /*url("https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=http://lafermechautems.ch&size=16");*/
+  background-image: url("https://raw.githubusercontent.com/Leornitho/invoices_and_orders/main/Plantule_FINAL.png"); /*url("https://t2.gstatic.com/faviconV2?client=SOCIAL&type=FAVICON&fallback_opts=TYPE,SIZE,URL&url=http://lafermechautems.ch&size=16");*/
   background-size: contain;
   background-repeat: no-repeat;
   background-position: center;
@@ -194,6 +194,13 @@ div.summary::after {
   text-align: left;
   color: #92ab4e;
   font-size: 300%;
+}
+
+.payment-info {
+  text-align: left;
+  color: black;
+  font-size: 100%;   /* plus petit que le texte normal */
+  margin-top: 10px;
 }
 
 div.instructions, .newlined, p.note {
@@ -356,10 +363,4 @@ div.column-name {
   max-width: 200px;   /* ajuste la taille */
   /*max-height: 200px; Remplacé par la ligne du dessous*/
   height: auto;
-}
-
-.qrcode {
-  width: 100%;
-  text-align: right;
-  margin-bottom: 10px;
 }
