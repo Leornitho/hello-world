@@ -239,11 +239,18 @@ div.paid {
 }
 
 @media print {
-  htlm, body{
-    zoom: 90%;
+  @page {
+    size: A4;
+    margin: 12mm;
+  }
+  html, body{
+    margin:0;
+    padding:0;
   }
   .invoice {
     width: 100%;
+    box-sizing: border-box;
+    padding:0;
   }
   div.print {
     display: none;
