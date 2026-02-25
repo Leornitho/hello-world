@@ -247,10 +247,16 @@ div.paid {
     margin:0;
     padding:0;
   }
+  body{
+    transform: scale(0.99);
+    transform-origin: top left;
+  }
   .invoice {
     width: 100%;
+    max-width: 100% !important;
     box-sizing: border-box;
     padding:0;
+    margin: 0;
   }
   div.print {
     display: none;
