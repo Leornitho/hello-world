@@ -1,3 +1,21 @@
+
+//Pour l'instant on ne demande pas de mapper le détail, car les références paraissent un peu problématiques
+
+
+/*    grist.onRecord(async (record) => {
+    // On récupère les colonnes mappées
+    const mapped = grist.mapColumnNames(record);
+
+    if (mapped) {
+        console.error("Toutes les colonnes sont mappées.")
+       
+    } else {
+        // Sinon, on affiche un message d'erreur dans la console
+        console.error("Toutes les colonnes n'ont pas été mappées.");
+    }
+});
+*/ // Code copié d'un autre endroit; a priori inutile pour nous, on utilise grist.mapColumnNames directement dans la fonction update invoice
+
 function ready(fn) {
   if (document.readyState !== 'loading'){
     fn();
@@ -41,8 +59,8 @@ function addDemo(row) { // Allows to give default values if the data isn't compl
       postal_code: 'XXXX'
     }
   }
-  if (!row.details) {
-    row.details = [
+  if (!row.detailed_sales) {
+    row.detailed_sales = [
       {
         product_format: 'Pas darticle dispo',
         product_format_clientside: 'problem',
@@ -70,6 +88,74 @@ const data = {
   haveRows: false,
 };
 let app = undefined;
+
+// Cache of fetched tables (columnar format from fetchTable).
+let salesMergedTable = null;
+let storesTable = null;
+let customersTable = null;
+let currentRow = null;
+let currentMapping = null;
+
+async function fetchSalesMerged() {
+  try {
+    salesMergedTable = await grist.docApi.fetchTable('Sales_merged');
+    console.log('sales_merged fetched, columns:', Object.keys(salesMergedTable));
+  } catch (e) {
+    console.error('fetchSalesMerged failed:', e);
+  }
+}
+
+async function fetchStores() {
+  try {
+    storesTable = await grist.docApi.fetchTable('Stores');
+    console.log('stores fetched, columns:', Object.keys(storesTable));
+  } catch (e) {
+    console.error('fetchStores failed:', e);
+  }
+}
+
+async function fetchCustomers() {
+  try {
+    customersTable = await grist.docApi.fetchTable('Customers');
+    console.log('customers fetched, columns:', Object.keys(customersTable));
+    console.log('customers table data:', JSON.stringify(customersTable));
+  } catch (e) {
+    console.error('fetchCustomers failed:', e);
+  }
+}
+
+// Generic lookup: given a columnar table and a row id, return a plain object with all fields.
+// If id is already an object (legacy RECORD expansion), return it as-is.
+function getRowById(table, id) {
+  if (!id) return null;
+  if (typeof id === 'object') return id;
+  if (!table) return null;
+  const idx = table.id.indexOf(id);
+  if (idx === -1) return null;
+  const result = {};
+  for (const col of Object.keys(table)) {
+    result[col] = table[col][idx];
+  }
+  return result;
+}
+
+function getDetailsForOrder(orderId) {
+  if (!salesMergedTable) return [];
+  const t = salesMergedTable;
+  const rows = [];
+  for (let i = 0; i < t.id.length; i++) {
+    if (t.order_id[i] === orderId) {
+      rows.push({
+        product_format_clientside: t.product_format_clientside[i],
+        unit_price_final:          t.unit_price_final[i],
+        UI_price_format:           t.UI_price_format ? t.UI_price_format[i] : null,
+        quantity:                  t.quantity[i],
+        total_price_final:         t.total_price_final[i],
+      });
+    }
+  }
+  return rows;
+}
 
 Vue.filter('currency', formatNumberAsCHF)
 function formatNumberAsCHF(value) {
@@ -148,8 +234,6 @@ console.log('before');
  console.log('mapped')
 const mapped = grist.mapColumnNames(row, mapping)
 console.log(JSON.stringify(mapped))
- //row = grist.mapColumnNames(row, mapping) || row; // On doit reassigner uniquement ce qui a été mappé, pas tout remplacer
- // var mapped_keys = Object.keys(mapped);
 
 console.log('after');
  console.log(JSON.stringify(row));
@@ -161,22 +245,23 @@ let row_donnees = ''
     if (row === null) {
       throw new Error("(No data - not on row - please add or select a row)");
     }
-    console.log("GOT...", JSON.stringify(row));
-    if (row.References) {
-      try {
-        Object.assign(row, row.References);
-        
-      } catch (err) {
-        throw new Error('Could not understand References column. ' + err);
-      }
-    }
+    // Apply column mapping so that widget field names (store, customer, order_id, etc.)
+    // are populated from whatever column names the user mapped in the Creator Panel.
+    if (mapped) Object.assign(row, mapped);
+    // Fetch line items from sales_merged, filtering by the order's row id.
+    row.detailed_sales = getDetailsForOrder(row.id);
+    // Look up store and customer from their respective tables using integer row IDs.
+    console.log('row.store raw:', row.store, 'storesTable ready:', !!storesTable);
+    console.log('row.customer raw:', row.customer, 'customersTable ready:', !!customersTable);
+    row.store = getRowById(storesTable, row.store) || row.store;
+    row.customer = getRowById(customersTable, row.customer) || row.customer;
 
      
 
      
     // Add some guidance about columns.
     const want = new Set(Object.keys(addDemo({}))); // Tout ce que nous donnons comme données dans addDemo (voir ci-dessous est "wanted" dans le invoice)
-    const accepted = new Set(['References']); // ??
+    const accepted = new Set();
     const importance = ['order_ID', 'customer', 'details', 'Total', 'Invoicer', 'Due', 
                         'order_date', 'Subtotal', 'Deduction', 'Taxes', 'Note', 'Paid']; // Sert uniquement à donner un ordre dans le helper
     
@@ -196,9 +281,6 @@ let row_donnees = ''
       }
       if (recognized.length > 0) {
         help.recognized = prepareList(recognized);
-      }
-      if (!seen.has('References') && !(row.Issued || row.Due)) {
-        row.SuggestReferencesColumn = true;
       }
     }
 
@@ -221,7 +303,7 @@ let row_donnees = ''
     for (const key of want) {
       Vue.delete(data.invoice, key); // Pourquoi ça ???
     }
-    for (const key of ['Help', 'SuggestReferencesColumn', 'References']) {
+    for (const key of ['Help', 'SuggestReferencesColumn']) {
       Vue.delete(data.invoice, key);
     }
 
@@ -229,7 +311,7 @@ let row_donnees = ''
     data.invoice = Object.assign({}, data.invoice, row);
     
     console.log(JSON.stringify(row));
-    console.log(JSON.stringify(row.details[0]));
+    console.log(JSON.stringify(row.detailed_sales[0]));
 
 
     // Make invoice information available for debugging.
@@ -247,20 +329,42 @@ ready(function() {
   
   
   grist.ready({ // On est obligé de mapper TOUTES les colonnes utiles dans le widget (grist core code)
+   requiredAccess: 'read table',
    columns:  [{name: 'order_id', type: 'Text'},
               {name: 'order_sales_sum_final'},
               {name: 'order_date', type: 'Date'},
-              {name:'store', type:"Ref"},
-              {name: 'customer', type: "Ref"},
-              {name: 'details', type:"RefList"},
-              {name: 'References'}]
+              {name:'store', type: 'Int'},
+              {name: 'customer', type: 'Int'}]
 }); // Pour dire à Grist que c'est prêt. Avant: sans les options
-  
-  grist.onRecord(updateInvoice);  //Crée tout le tsouin tsouin à balancer au HTML, à chaque évenement "onRecord"
+
+  fetchSalesMerged(); // Initial load of the sales_merged table (after grist.ready).
+  fetchStores();
+  fetchCustomers();
+
+  grist.onRecord((row, mapping) => {  //Crée tout le tsouin tsouin à balancer au HTML, à chaque évenement "onRecord"
+    currentRow = row;
+    currentMapping = mapping;
+    const allReady = salesMergedTable && storesTable && customersTable;
+    if (!allReady) {
+      Promise.all([
+        salesMergedTable  ? Promise.resolve() : fetchSalesMerged(),
+        storesTable       ? Promise.resolve() : fetchStores(),
+        customersTable    ? Promise.resolve() : fetchCustomers(),
+      ]).then(() => updateInvoice(row, mapping)).catch(() => updateInvoice(row, mapping));
+    } else {
+      updateInvoice(row, mapping);
+    }
+  });
 
 
   // Monitor status so we can give user advice.
   grist.on('message', msg => {
+    // Re-fetch sales_merged whenever data changes so line items stay current.
+    if (msg.dataChange) {
+      Promise.all([fetchSalesMerged(), fetchStores(), fetchCustomers()]).then(() => {
+        if (currentRow) updateInvoice(currentRow, currentMapping);
+      });
+    }
     // If we are told about a table but not which row to access, check the
     // number of rows.  Currently if the table is empty, and "select by" is
     // not set, onRecord() will never be called.
