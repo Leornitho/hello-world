@@ -44,7 +44,14 @@
                     <div class="phone">{{ business.phone }}</div>
                   </template>
                   <template v-if="business.website">
-                    <div class="website"><a v-bind:href="business.Url">{{ business.website }}</a></div>
+                    <div class="website">
+                        <img 
+                          src="https://raw.githubusercontent.com/Leornitho/invoices_and_orders/main/Plantule_FINAL.png"
+                          class="website-icon"
+                          alt="site"
+                        />
+                      <a v-bind:href="business.Url">{{ business.website }}</a>
+                    </div>
                   </template>
                 </template>
               </div>
