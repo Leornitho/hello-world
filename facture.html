@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="utf-8">
+    <title>Grist Facture</title>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.3/vue.min.js"></script>
+    <script src="https://docs.getgrist.com/grist-plugin-api.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/dayjs.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/dayjs@1/locale/fr.js"></script>
+    <script src="https://leornitho.github.io/invoices_and_orders/qrcode.min.js"></script>
+
+    <link rel="stylesheet" href="https://leornitho.github.io/invoices_and_orders/invoice.css">
+
+    <style>
+      /* Toggle button — hidden on print */
+      .mode-toggle { margin: 8px 0; }
+      .mode-toggle a {
+        background: #4682B4;
+        display: inline-block;
+        color: white;
+        text-decoration: none;
+        padding: 0.25em 0.6em;
+        border-radius: 0.4em;
+        font-size: 90%;
+      }
+      .mode-toggle a:hover { background: #315f8a; }
+      @media print { .mode-toggle { display: none; } }
+
+      /* 30-day payment notice */
+      .payment-terms {
+        margin-top: 0.8em;
+        margin-bottom: 0.5em;
+        font-size: 90%;
+        color: #555;
+      }
+
+      /* Scissors cut line */
+      .qr-cut-line {
+        border-top: 0.75pt dashed #000;
+        position: relative;
+        height: 0;
+      }
+      .qr-scissors {
+        position: absolute;
+        left: 0;
+        top: -11px;
+        font-size: 18px;
+        color: #555;
+        transform: rotate(90deg);
+        line-height: 1;
+      }
+
+      /* === Swiss QR Bill (adapted from multisum/html-swiss-qr-bill, MIT) === */
+      #qr_bill {
+        font-family: 'Liberation Sans', Arial, Helvetica, sans-serif;
+        display: grid;
+        grid-template-columns: 5fr 52fr 10fr 138fr 5fr;
+        background: white;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      #qr_bill * { margin: 0; padding: 0; }
+      #qr_bill h2, #qr_bill h3 { font-weight: bold; }
+      #qr_bill h2 { font-size: 1.1em; }
+
+      #qr_bill_receipt {
+        grid-column: 2;
+        display: grid;
+        grid-template-rows: 5fr 7fr 56fr 14fr 18fr 5fr;
+        border-right: 0.75pt dashed #000;
+      }
+      #qr_bill_receipt_title           { grid-row: 2; }
+      #qr_bill_receipt_information     { grid-row: 3; }
+      #qr_bill_receipt_amount          { grid-row: 4; }
+      #qr_bill_receipt_acceptancepoint { grid-row: 5; text-align: right; }
+
+      #qr_bill_receipt h3 { font-size: .6em; line-height: calc(.9em / .6); }
+      #qr_bill_receipt p  { font-size: .8em; line-height: calc(.9em / .8); padding-bottom: calc(.9em / .8); }
+      #qr_bill_receipt_amount p              { line-height: calc(1.1em / .8); }
+      #qr_bill_receipt_acceptancepoint h3    { line-height: calc(.8em / .6); }
+      #qr_bill_receipt_amount div:first-child { width: 22%; float: left; }
+
+      #qr_bill_paymentpart {
+        grid-column: 4;
+        display: grid;
+        grid-template-columns: 51fr 87fr;
+        grid-template-rows: 5fr 7fr 56fr 22fr 10fr 5fr;
+      }
+      #qr_bill_paymentpart_title           { grid-column: 1; grid-row: 2; }
+      #qr_bill_paymentpart_qrcode          { grid-column: 1; grid-row: 3; }
+      #qr_bill_paymentpart_amount          { grid-column: 1; grid-row: 4; }
+      #qr_bill_paymentpart_information     { grid-column: 2; grid-row: 2 / 5; }
+      #qr_bill_paymentpart_furtherinformation { grid-column: 1 / 3; grid-row: 5; }
+
+      #qr_bill_paymentpart h3 { font-size: .8em; line-height: calc(1.1em / .8); }
+      #qr_bill_paymentpart p  { font-size: 1em;  line-height: 1.1em; padding-bottom: 1.1em; }
+      #qr_bill_paymentpart_amount p              { line-height: 1.3em; }
+      #qr_bill_paymentpart_furtherinformation *  { font-size: .7em; line-height: calc(.8em / .7); }
+      #qr_bill_paymentpart_amount div:first-child { width: 30%; float: left; }
+
+      #qr_bill_paymentpart_qrcode canvas { display: block; }
+
+      @media screen {
+        :root {
+          --qr_bill-10pt: calc(960px / 72);
+          --qr_bill-10mm: calc(72 * var(--qr_bill-10pt) / 25.4);
+        }
+        .swiss-qr-bill { margin-top: 1.5em; overflow-x: auto; }
+        #qr_bill {
+          width: calc(21 * var(--qr_bill-10mm));
+          height: calc(10.5 * var(--qr_bill-10mm));
+          font-size: var(--qr_bill-10pt);
+        }
+        #qr_bill_paymentpart_qrcode canvas {
+          width: calc(4.6 * var(--qr_bill-10mm));
+          height: calc(4.6 * var(--qr_bill-10mm));
+          margin-top: calc(.5 * var(--qr_bill-10mm));
+        }
+      }
+
+      @media print {
+        .swiss-qr-bill { margin-top: 1em; page-break-inside: avoid; }
+        #qr_bill { width: 21cm; height: 10.5cm; font-size: 10pt; }
+        #qr_bill_paymentpart_qrcode canvas {
+          width: 4.6cm;
+          height: 4.6cm;
+          margin-top: .5cm;
+        }
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="app">
+      <div class="invoice" v-if="invoice">
+        <template v-if="invoice">
+
+          <!-- Supplier address + logo -->
+          <div class="top">
+            <div class="supplier">
+              <div v-for="business in (invoice.store ? [invoice.store] : [])">
+                <template v-if="typeof(business) === 'string'">
+                  <div class="address newlined">{{ business }}</div>
+                </template>
+                <template v-else>
+                  <div class="address">
+                    <span class="name">{{ business.store_official_name }}</span><br>
+                    {{ business.street }} {{ business.house_number }}<br>
+                    {{ business.city }} {{ business.postal_code }}
+                  </div>
+                  <template v-if="business.email">
+                    <div class="email">{{ business.email }}</div>
+                  </template>
+                  <template v-if="business.phone">
+                    <div class="phone">{{ business.phone }}</div>
+                  </template>
+                  <template v-if="business.website">
+                    <div class="website">
+                      <img
+                        src="https://raw.githubusercontent.com/Leornitho/invoices_and_orders/main/Plantule_FINAL.png"
+                        class="website-icon"
+                        alt="site"
+                      />
+                      <a v-bind:href="business.Url">{{ business.website }}</a>
+                    </div>
+                  </template>
+                </template>
+              </div>
+            </div>
+
+            <div class="logo-container">
+              <img
+                src="https://lafermechautems.ch/wp-content/uploads/2025/03/cropped-cropped-Logo_FINAL_black-233x233.png"
+                alt="Logo"
+                class="logo"
+              />
+            </div>
+          </div>
+
+          <!-- Invoice number / date + client -->
+          <div class="top">
+            <div class="block">
+              <div class="info"><span class="meta">Facture</span> {{ invoice.invoice_id }}</div>
+              <div class="info" v-if="invoice.invoice_date">
+                <div class="meta date-tag">Du</div> {{ invoice.invoice_date | asDateJS }}
+              </div>
+            </div>
+
+            <div class="client" v-for="customer in (invoice.customer ? [invoice.customer] : [])">
+              <div class="title">Client</div>
+              <div class="details">
+                <template v-if="typeof(customer) === 'string'">
+                  <div class="newlined">{{ customer }}</div>
+                </template>
+                <template v-else>
+                  <template v-if="customer.name">{{ customer.name }}<br></template>
+                  <template v-if="customer.company_name">{{ customer.company_name }}</template>
+                  <template v-if="customer.street"><br>{{ customer.street }}</template>
+                  <template v-if="customer.house_number"> {{ customer.house_number }}</template>
+                  <br>{{ customer.city }} {{ customer.postal_code }}
+                </template>
+              </div>
+            </div>
+          </div>
+
+          <!-- Mode toggle (hidden on print) -->
+          <div class="mode-toggle">
+            <a href="javascript:void(0)" v-on:click="toggleMode">
+              {{ displayMode === 'detailed' ? 'Afficher par commandes' : 'Afficher le détail des articles' }}
+            </a>
+          </div>
+
+          <!-- Detailed items table -->
+          <template v-if="displayMode === 'detailed'">
+            <table class="items">
+              <template v-if="!Array.isArray(invoice.detailed_sales) || invoice.detailed_sales.length === 0">
+                <tr>
+                  <th>Produit</th>
+                  <th class="money">Total</th>
+                </tr>
+                <tr>
+                  <td>—</td>
+                  <td class="money">{{ invoice.invoice_sum | currency }}</td>
+                </tr>
+              </template>
+              <template v-else>
+                <tr>
+                  <th>Produit</th>
+                  <th class="money">Prix unitaire</th>
+                  <th class="number">Quantité</th>
+                  <th class="money">Total</th>
+                </tr>
+                <tr v-for="item in invoice.detailed_sales">
+                  <td>{{ item.product_format_clientside }}</td>
+                  <td class="money">{{ item.unit_price_final.toFixed(2) }} {{ item.UI_price_format }}</td>
+                  <td class="number">{{ item.quantity }}</td>
+                  <td class="money">{{ item.total_price_final | currency }}</td>
+                </tr>
+              </template>
+            </table>
+          </template>
+
+          <!-- Orders summary table -->
+          <template v-if="displayMode === 'summary'">
+            <table class="items">
+              <template v-if="!Array.isArray(invoice.detailed_orders) || invoice.detailed_orders.length === 0">
+                <tr><th>Commande</th><th class="money">Total</th></tr>
+                <tr><td>—</td><td class="money">{{ invoice.invoice_sum | currency }}</td></tr>
+              </template>
+              <template v-else>
+                <tr>
+                  <th>Date</th>
+                  <th class="money">Total commande</th>
+                </tr>
+                <tr v-for="order in invoice.detailed_orders">
+                  <td>{{ order.order_date | asDateJS }}</td>
+                  <td class="money">{{ order.order_sales_sum_final | currency }}</td>
+                </tr>
+              </template>
+            </table>
+          </template>
+
+          <!-- Total -->
+          <div class="summary">
+            <div class="total">
+              <div class="title">Total</div>
+              <div class="details">{{ invoice.invoice_sum | currency }}</div>
+            </div>
+          </div>
+
+          <!-- Notes -->
+          <template v-if="invoice.client_note">
+            <p class="note">{{ invoice.client_note }}</p>
+          </template>
+
+          <!-- Footer -->
+          <div class="footer">
+            <div class="thanks">Merci pour votre commande!</div>
+          </div>
+
+          <!-- Payment terms -->
+          <p class="payment-terms">Paiement dû dans les 30 jours suivant la date de facturation.</p>
+
+          <!-- Swiss QR bill (SIX standard layout, adapted from multisum/html-swiss-qr-bill) -->
+          <div class="swiss-qr-bill">
+            <div class="qr-cut-line"><span class="qr-scissors">✂</span></div>
+            <div id="qr_bill">
+
+              <div id="qr_bill_receipt">
+                <div id="qr_bill_receipt_title"><h2>Récépissé</h2></div>
+                <div id="qr_bill_receipt_information">
+                  <h3>Compte / Payable à</h3>
+                  <p>CH32 0900 0000 8932 2727 1<br>La Ferme Chautems sàrl<br>1 ch. du Champ du Boeuf<br>1789 Lugnorre</p>
+                  <template v-if="invoice.scorRef">
+                    <h3>Référence</h3>
+                    <p>{{ invoice.scorRef }}</p>
+                  </template>
+                  <h3>Payable par</h3>
+                  <p v-if="invoice.customer && typeof invoice.customer === 'object'">{{ invoice.customer.company_name || invoice.customer.name }}<br>{{ invoice.customer.street }} {{ invoice.customer.house_number }}<br>{{ invoice.customer.postal_code }} {{ invoice.customer.city }}</p>
+                </div>
+                <div id="qr_bill_receipt_amount">
+                  <div><h3>Monnaie</h3><p>CHF</p></div>
+                  <div><h3>Montant</h3><p>{{ typeof invoice.invoice_sum === 'number' ? invoice.invoice_sum.toFixed(2) : '' }}</p></div>
+                </div>
+                <div id="qr_bill_receipt_acceptancepoint"><h3>Point de dépôt</h3></div>
+              </div>
+
+              <div id="qr_bill_paymentpart">
+                <div id="qr_bill_paymentpart_title"><h2>Section paiement</h2></div>
+                <div id="qr_bill_paymentpart_qrcode"><div id="qr-code-container"></div></div>
+                <div id="qr_bill_paymentpart_amount">
+                  <div><h3>Monnaie</h3><p>CHF</p></div>
+                  <div><h3>Montant</h3><p>{{ typeof invoice.invoice_sum === 'number' ? invoice.invoice_sum.toFixed(2) : '' }}</p></div>
+                </div>
+                <div id="qr_bill_paymentpart_information">
+                  <h3>Compte / Payable à</h3>
+                  <p>CH32 0900 0000 8932 2727 1<br>La Ferme Chautems sàrl<br>1 ch. du Champ du Boeuf<br>1789 Lugnorre</p>
+                  <template v-if="invoice.scorRef">
+                    <h3>Référence</h3>
+                    <p>{{ invoice.scorRef }}</p>
+                  </template>
+                  <h3>Payable par (nom/adresse)</h3>
+                  <p v-if="invoice.customer && typeof invoice.customer === 'object'">{{ invoice.customer.company_name || invoice.customer.name }}<br>{{ invoice.customer.street }} {{ invoice.customer.house_number }}<br>{{ invoice.customer.postal_code }} {{ invoice.customer.city }}</p>
+                </div>
+                <div id="qr_bill_paymentpart_furtherinformation" v-if="invoice.invoice_id">
+                  <p>Facture {{ invoice.invoice_id }}</p>
+                </div>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- Print button -->
+          <div class="print">
+            <a href="javascript:window.print()">Imprimer</a>
+          </div>
+
+        </template>
+      </div>
+    </div>
+
+    <script src="facture.js"></script>
+  </body>
+</html>
