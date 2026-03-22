@@ -90,7 +90,7 @@
       #qr_bill_paymentpart_title           { grid-column: 1; grid-row: 2; }
       #qr_bill_paymentpart_qrcode          { grid-column: 1; grid-row: 3; }
       #qr_bill_paymentpart_amount          { grid-column: 1; grid-row: 4; }
-      #qr_bill_paymentpart_information     { grid-column: 2; grid-row: 2 / 5; }
+      #qr_bill_paymentpart_information     { grid-column: 2; grid-row: 2 / 5; padding-left: 6mm; }
       #qr_bill_paymentpart_furtherinformation { grid-column: 1 / 3; grid-row: 5; }
 
       #qr_bill_paymentpart h3 { font-size: .8em; line-height: calc(1.1em / .8); }
@@ -99,7 +99,7 @@
       #qr_bill_paymentpart_furtherinformation *  { font-size: .7em; line-height: calc(.8em / .7); }
       #qr_bill_paymentpart_amount div:first-child { width: 30%; float: left; }
 
-      #qr_bill_paymentpart_qrcode canvas { display: block; margin-right: 3mm; }
+      #qr_bill_paymentpart_qrcode canvas { display: block; }
 
       @media screen {
         :root {
@@ -195,10 +195,9 @@
                 </template>
                 <template v-else>
                   <template v-if="customer.name">{{ customer.name }}<br></template>
-                  <template v-if="customer.company_name">{{ customer.company_name }}</template>
-                  <template v-if="customer.street"><br>{{ customer.street }}</template>
-                  <template v-if="customer.house_number"> {{ customer.house_number }}</template>
-                  <br>{{ customer.city }} {{ customer.postal_code }}
+                  <template v-if="customer.company_name">{{ customer.company_name }}<br></template>
+                  <template v-if="customer.street">{{ customer.street }}<template v-if="customer.house_number"> {{ customer.house_number }}</template><br></template>
+                  {{ customer.city }} {{ customer.postal_code }}
                 </template>
               </div>
             </div>
@@ -297,7 +296,7 @@
                     <p>{{ invoice.scorRef }}</p>
                   </template>
                   <h3>Payable par</h3>
-                  <p v-if="invoice.customer && typeof invoice.customer === 'object'">{{ invoice.customer.company_name || invoice.customer.name }}<br>{{ invoice.customer.street }} {{ invoice.customer.house_number }}<br>{{ invoice.customer.postal_code }} {{ invoice.customer.city }}</p>
+                  <p v-if="invoice.customer && typeof invoice.customer === 'object'"><template v-if="invoice.customer.name">{{ invoice.customer.name }}<br></template><template v-if="invoice.customer.company_name">{{ invoice.customer.company_name }}<br></template><template v-if="invoice.customer.street">{{ invoice.customer.street }}<template v-if="invoice.customer.house_number"> {{ invoice.customer.house_number }}</template><br></template>{{ invoice.customer.postal_code }} {{ invoice.customer.city }}</p>
                 </div>
                 <div id="qr_bill_receipt_amount">
                   <div><h3>Monnaie</h3><p>CHF</p></div>
@@ -321,7 +320,7 @@
                     <p>{{ invoice.scorRef }}</p>
                   </template>
                   <h3>Payable par (nom/adresse)</h3>
-                  <p v-if="invoice.customer && typeof invoice.customer === 'object'">{{ invoice.customer.company_name || invoice.customer.name }}<br>{{ invoice.customer.street }} {{ invoice.customer.house_number }}<br>{{ invoice.customer.postal_code }} {{ invoice.customer.city }}</p>
+                  <p v-if="invoice.customer && typeof invoice.customer === 'object'"><template v-if="invoice.customer.name">{{ invoice.customer.name }}<br></template><template v-if="invoice.customer.company_name">{{ invoice.customer.company_name }}<br></template><template v-if="invoice.customer.street">{{ invoice.customer.street }}<template v-if="invoice.customer.house_number"> {{ invoice.customer.house_number }}</template><br></template>{{ invoice.customer.postal_code }} {{ invoice.customer.city }}</p>
                 </div>
               </div>
 

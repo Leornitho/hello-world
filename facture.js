@@ -143,21 +143,6 @@ function getDetailedOrdersForInvoice(rawList) {
   return results;
 }
 
-// Compute ISO 11649 (SCOR) creditor reference from an invoice ID string.
-function computeSCORReference(ref) {
-  ref = String(ref).replace(/[^A-Za-z0-9]/g, '').toUpperCase().slice(0, 21);
-  if (!ref) return '';
-  // Append RF00, convert letters to digits (A=10 … Z=35), then MOD 97.
-  const digits = (ref + 'RF00').split('').map(c => {
-    const code = c.charCodeAt(0);
-    return (code >= 65 && code <= 90) ? (code - 55).toString() : c;
-  }).join('');
-  let remainder = 0;
-  for (const ch of digits) { remainder = (remainder * 10 + parseInt(ch)) % 97; }
-  const check = String(98 - remainder).padStart(2, '0');
-  return 'RF' + check + ref;
-}
-
 // Strip accents to ASCII — qrcodejs (loaded by Grist) treats each JS char as 2 bytes,
 // so non-ASCII content exceeds its internal limit. ASCII-only stays within bounds.
 function toASCII(str) {
@@ -175,7 +160,7 @@ function generateQRData(invoice) {
   const amount = typeof invoice.invoice_sum === 'number'
     ? invoice.invoice_sum.toFixed(2)
     : '';
-  const ref = computeSCORReference(invoice.invoice_id || '');
+  const ref = t(invoice.reference || '', 25);
   const msg = t(invoice.invoice_id ? 'Facture ' + invoice.invoice_id : '', 140);
 
   let dType = '', dName = '', dAddr1 = '', dAddr2 = '', dCountry = '';
@@ -292,7 +277,7 @@ function updateInvoice(row, mapping) {
 
     addDemo(row);
 
-    row.scorRef = computeSCORReference(row.invoice_id || '');
+    row.scorRef = String(row.reference || '').replace(/(.{4})/g, '$1 ').trim();
 
     data.invoice = Object.assign({}, data.invoice, row);
     window.invoice = row;
@@ -301,6 +286,7 @@ function updateInvoice(row, mapping) {
     const qrPayload = {
       invoice_id:  row.invoice_id,
       invoice_sum: row.invoice_sum,
+      reference:   row.reference,
       customer: row.customer && typeof row.customer === 'object' ? {
         company_name: row.customer.company_name,
         name:         row.customer.name,
@@ -327,6 +313,8 @@ ready(function() {
       { name: 'customer',        type: 'Int'     },
       { name: 'detailed_sales',  type: 'RefList' },
       { name: 'detailed_orders', type: 'RefList' },
+      { name: 'client_note',     type: 'Text'    },
+      { name: 'reference',       type: 'Text'    },
     ],
   });
 

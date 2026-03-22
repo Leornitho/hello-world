@@ -334,7 +334,8 @@ ready(function() {
               {name: 'order_sales_sum_final'},
               {name: 'order_date', type: 'Date'},
               {name:'store', type: 'Int'},
-              {name: 'customer', type: 'Int'}]
+              {name: 'customer', type: 'Int'},
+            {name: 'client_note', type: 'Text'}]
 }); // Pour dire à Grist que c'est prêt. Avant: sans les options
 
   fetchSalesMerged(); // Initial load of the sales_merged table (after grist.ready).
