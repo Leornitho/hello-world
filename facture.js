@@ -160,20 +160,13 @@ function generateQRData(invoice) {
   const amount = typeof invoice.invoice_sum === 'number'
     ? invoice.invoice_sum.toFixed(2)
     : '';
-  const ref = t(invoice.reference || '', 25);
+  const ref = toASCII(String(invoice.reference || '').replace(/\s/g, '')).slice(0, 25);
   const msg = t(invoice.invoice_id ? 'Facture ' + invoice.invoice_id : '', 140);
 
-  let dType = '', dName = '', dAddr1 = '', dAddr2 = '', dCountry = '';
-  const c = invoice.customer;
-  if (c && typeof c === 'object') {
-    dType    = 'K';
-    dName    = t(c.company_name || c.name, 70);
-    dAddr1   = t((c.street || '') + (c.house_number ? ' ' + c.house_number : ''), 70);
-    dAddr2   = t((c.postal_code || '') + ' ' + (c.city || ''), 70);
-    dCountry = 'CH';
-  }
-
   // 31 mandatory fields, one per line, separated by \r\n.
+  // Fields 9-10: empty (required for creditor type K)
+  // Fields 12-18: 7 empty lines (UltimateCreditor, reserved)
+  // Fields 21-27: 7 empty lines (no UltimateDebtor)
   const data = [
     'SPC',                      // 1  header
     '0200',                     // 2  version
@@ -189,15 +182,9 @@ function generateQRData(invoice) {
     '', '', '', '', '', '', '', // 12-18 ultimate creditor (all empty)
     amount,                     // 19 amount
     'CHF',                      // 20 currency
-    dType,                      // 21 debtor addr type
-    dName,                      // 22 debtor name
-    dAddr1,                     // 23 debtor addr line 1
-    dAddr2,                     // 24 debtor addr line 2
-    '',                         // 25 (empty for type K)
-    '',                         // 26 (empty for type K)
-    dCountry,                   // 27 debtor country
+    '', '', '', '', '', '', '', // 21-27 ultimate debtor (all empty)
     'SCOR',                     // 28 reference type
-    t(ref, 25),                 // 29 reference
+    ref,                        // 29 reference
     msg,                        // 30 unstructured message
     'EPD',                      // 31 trailer
   ].join('\r\n');
@@ -287,14 +274,6 @@ function updateInvoice(row, mapping) {
       invoice_id:  row.invoice_id,
       invoice_sum: row.invoice_sum,
       reference:   row.reference,
-      customer: row.customer && typeof row.customer === 'object' ? {
-        company_name: row.customer.company_name,
-        name:         row.customer.name,
-        street:       row.customer.street,
-        house_number: row.customer.house_number,
-        postal_code:  row.customer.postal_code,
-        city:         row.customer.city,
-      } : null,
     };
     Vue.nextTick(() => renderQR(qrPayload));
   } catch (err) {
