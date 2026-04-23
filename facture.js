@@ -105,8 +105,9 @@ function getDetailedSalesForInvoice(rawList) {
     // Already resolved objects — extract the fields we need.
     return rawList.map(r => ({
       product_format_clientside: r.product_format_clientside,
-      unit_price_final:          r.unit_price_final,
+      unit_price_final:          r.H_price_before_manual_discount ?? r.unit_price_final,
       UI_price_format:           r.UI_price_format || null,
+      discount_manual:           r.discount_manual || null,
       quantity:                  r.quantity,
       total_price_final:         r.total_price_final,
     }));
@@ -118,8 +119,9 @@ function getDetailedSalesForInvoice(rawList) {
     if (!r) return null;
     return {
       product_format_clientside: r.product_format_clientside,
-      unit_price_final:          r.unit_price_final,
+      unit_price_final:          r.H_price_before_manual_discount ?? r.unit_price_final,
       UI_price_format:           r.UI_price_format || null,
+      discount_manual:           r.discount_manual || null,
       quantity:                  r.quantity,
       total_price_final:         r.total_price_final,
     };
@@ -223,6 +225,11 @@ Vue.filter('currency', function(value) {
   value = (value === -0 ? 0 : value);
   const result = value.toLocaleString('en', { style: 'currency', currency: 'CHF' });
   return result.includes('NaN') ? value : result;
+});
+
+Vue.filter('percent', function(value) {
+  if (!value && value !== 0) return '—';
+  return Math.round(value * 100) + '%';
 });
 
 Vue.filter('asDateJS', function(value) {

@@ -147,8 +147,9 @@ function getDetailsForOrder(orderId) {
     if (t.order_id[i] === orderId) {
       rows.push({
         product_format_clientside: t.product_format_clientside[i],
-        unit_price_final:          t.unit_price_final[i],
+        unit_price_final:          t.H_price_before_manual_discount ? t.H_price_before_manual_discount[i] : null,
         UI_price_format:           t.UI_price_format ? t.UI_price_format[i] : null,
+        discount_manual:           t.discount_manual ? t.discount_manual[i] : null,
         quantity:                  t.quantity[i],
         total_price_final:         t.total_price_final[i],
       });
@@ -173,6 +174,11 @@ function formatNumberAsCHF(value) {
   }
   return result;
 }
+
+Vue.filter('percent', function(value) {
+  if (!value && value !== 0) return '—';
+  return Math.round(value * 100) + '%';
+});
 
 Vue.filter('fallback', function(value, str) {
   if (!value) {

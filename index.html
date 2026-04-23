@@ -13,6 +13,7 @@
     <script src="https://cdn.jsdelivr.net/npm/dayjs@1/locale/fr.js"></script> <!-- tentative pour mieux formatter la date en français-->
 
     <script src="exampleData.js"></script>
+    <script src="invoice.js"></script>
 
     <link rel="stylesheet" href="https://leornitho.github.io/invoices_and_orders/invoice.css"> <!-- On garde tout le CSS depuis github -->
   </head>
@@ -118,12 +119,14 @@
               <tr>
                 <th>Produit</th>
                 <th class="money">Prix</th>
+                <th class="money">Rabais produit</th>
                 <th class="number">Quantité</th>
                 <th class="money">Total</th>
               </tr>
               <tr v-for="item in invoice.detailed_sales">
-                <td> {{ item.product_format_clientside }}</td> <!-- je n'arrive pas à aller plus loin. dans les tables/sous tables, raccourci utilisé sans référence sur .product_format_clientside -->
+                <td> {{ item.product_format_clientside }}</td>
                 <td class="money">{{item.unit_price_final.toFixed(2)}} {{ item.UI_price_format}}</td>
+                <td class="money">{{ item.discount_manual | percent }}</td>
                 <td class="number">{{ item.quantity }}</td>
                 <td class="money">{{ item.total_price_final | currency}}</td>
               </tr>
