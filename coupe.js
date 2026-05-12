@@ -28,6 +28,7 @@ function fmtTotal(q) {
 async function fetchSales() {
   try {
     salesTable = await grist.docApi.fetchTable('Sales_merged');
+    console.log('Sales_merged columns:', Object.keys(salesTable));
   } catch(e) {
     console.error('fetchSales failed:', e);
     if (app) app.status = 'Erreur chargement: ' + e.message;
@@ -49,6 +50,10 @@ const data = {
 function buildPivot() {
   if (!salesTable) return;
   const t = salesTable;
+  if (!t.harvest_date) {
+    data.status = 'Colonne harvest_date introuvable. Colonnes disponibles: ' + Object.keys(t).join(', ');
+    return;
+  }
 
   // Collect unique dates
   const dateSet = new Set();
