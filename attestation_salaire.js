@@ -62,6 +62,7 @@ Vue.filter('f2', function(n) {
 const data = { slip: null, status: 'En attente…' };
 let app;
 let heuresAliciaTable = null;
+let employeesTable = null;
 let currentRow = null;
 let currentMapping = null;
 
@@ -73,6 +74,14 @@ async function fetchHeuresAlicia() {
   }
 }
 
+async function fetchEmployees() {
+  try {
+    employeesTable = await grist.docApi.fetchTable('employees');
+  } catch(e) {
+    console.error('fetchEmployees failed:', e);
+  }
+}
+
 function updateSlip(row) {
   try {
     if (!row) { data.slip = null; data.status = 'En attente…'; return; }
@@ -80,6 +89,8 @@ function updateSlip(row) {
     // Resolve the month reference to get the "2026-04" text value.
     const monthRow = getRowById(heuresAliciaTable, row.month);
     const monthText = monthRow ? (monthRow.month || '') : String(row.month || '');
+
+    const emp = getRowById(employeesTable, row.employee) || {};
 
     const hours   = parseHours(row.hours);
     const gross   = r2(hours * HOURLY_RATE);
@@ -91,15 +102,15 @@ function updateSlip(row) {
     const net     = r2(gross - totalDed);
 
     data.slip = {
-      employee_name:         row.employee_name || '',
-      employee_address:      row.employee_address || '',
-      employee_city:         row.employee_city || '',
-      employee_nationality:  row.employee_nationality || 'Suisse',
-      employee_civil_status: row.employee_civil_status || '',
-      employee_children:     row.employee_children != null ? row.employee_children : 0,
-      employee_avs:          row.employee_avs || '',
-      employee_function:     row.employee_function || '',
-      employee_iban:         row.employee_iban || '',
+      employee_name:         emp.name || '',
+      employee_address:      emp.adress || '',
+      employee_city:         emp.city || '',
+      employee_nationality:  emp.nationality || 'Suisse',
+      employee_civil_status: emp.civil_status || '',
+      employee_children:     emp.children != null ? emp.children : 0,
+      employee_avs:          emp.avs || '',
+      employee_function:     emp.function || '',
+      employee_iban:         emp.iban || '',
       firstDay: monthFirstDay(monthText),
       lastDay:  monthLastDay(monthText),
       hours,
@@ -118,29 +129,26 @@ ready(function() {
   grist.ready({
     requiredAccess: 'read table',
     columns: [
-      { name: 'month',                 type: 'Int'     },
-      { name: 'hours',                 type: 'Numeric' },
-      { name: 'employee_name',         type: 'Text'    },
-      { name: 'employee_address',      type: 'Text'    },
-      { name: 'employee_city',         type: 'Text'    },
-      { name: 'employee_nationality',  type: 'Text'    },
-      { name: 'employee_civil_status', type: 'Text'    },
-      { name: 'employee_children',     type: 'Int'     },
-      { name: 'employee_avs',          type: 'Text'    },
-      { name: 'employee_function',     type: 'Text'    },
-      { name: 'employee_iban',         type: 'Text'    },
+      { name: 'month',    type: 'Int'     },
+      { name: 'hours',    type: 'Numeric' },
+      { name: 'employee', type: 'Int'     },
     ],
   });
 
   fetchHeuresAlicia();
+  fetchEmployees();
 
   grist.onRecord((row, mapping) => {
     currentRow = row;
     currentMapping = mapping;
     const mapped = grist.mapColumnNames(row, mapping);
     if (mapped) Object.assign(row, mapped);
-    if (!heuresAliciaTable) {
-      fetchHeuresAlicia().then(() => updateSlip(row));
+    const allReady = heuresAliciaTable && employeesTable;
+    if (!allReady) {
+      Promise.all([
+        heuresAliciaTable ? Promise.resolve() : fetchHeuresAlicia(),
+        employeesTable    ? Promise.resolve() : fetchEmployees(),
+      ]).then(() => updateSlip(row));
     } else {
       updateSlip(row);
     }
@@ -148,8 +156,8 @@ ready(function() {
 
   grist.on('message', msg => {
     if (msg.dataChange) {
-      fetchHeuresAlicia().then(() => {
-        if (currentRow) updateSlip(currentRow, currentMapping);
+      Promise.all([fetchHeuresAlicia(), fetchEmployees()]).then(() => {
+        if (currentRow) updateSlip(currentRow);
       });
     }
   });
