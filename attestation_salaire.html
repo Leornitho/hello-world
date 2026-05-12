@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>Fiche de salaire</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.3/vue.min.js"></script>
+  <script src="https://docs.getgrist.com/grist-plugin-api.js"></script>
+  <link rel="stylesheet" href="attestation_salaire.css">
+</head>
+<body>
+<div id="app">
+  <div v-if="status" class="status">{{ status }}</div>
+  <div v-if="slip" class="slip">
+
+    <!-- Title -->
+    <div class="slip-title">Fiche de salaire <span class="slip-subtitle">– Salaire horaire</span></div>
+
+    <!-- Employer | Employee + personal info -->
+    <table class="header-table">
+      <tr>
+        <td class="employer-cell" rowspan="9">
+          <strong>Employeur</strong><br>
+          La Ferme Chautems sàrl<br>
+          ch. du Champ du Boeuf 1<br>
+          1789 Lugnorre<br>
+          Suisse
+        </td>
+        <td class="info-label-bold">Employé</td>
+        <td>{{ slip.employee_name }}</td>
+      </tr>
+      <tr>
+        <td></td>
+        <td>{{ slip.employee_address }}</td>
+      </tr>
+      <tr>
+        <td></td>
+        <td>{{ slip.employee_city }}</td>
+      </tr>
+      <tr>
+        <td></td>
+        <td>Suisse</td>
+      </tr>
+      <tr class="sep">
+        <td class="info-label">Nationalité</td>
+        <td>{{ slip.employee_nationality }}</td>
+      </tr>
+      <tr class="sep">
+        <td class="info-label">État civil</td>
+        <td>{{ slip.employee_civil_status }}</td>
+      </tr>
+      <tr class="sep">
+        <td class="info-label">Nombre d'enfants</td>
+        <td>{{ slip.employee_children }}</td>
+      </tr>
+      <tr class="sep">
+        <td class="info-label">Numéro AVS</td>
+        <td>{{ slip.employee_avs }}</td>
+      </tr>
+      <tr class="sep">
+        <td class="info-label">Fonction</td>
+        <td>{{ slip.employee_function }}</td>
+      </tr>
+    </table>
+
+    <!-- Salary period -->
+    <table class="period-table">
+      <tr>
+        <td class="period-label">Salaire de</td>
+        <td class="period-value">{{ slip.firstDay }}</td>
+        <td class="period-label">Salaire jusqu'au</td>
+        <td>{{ slip.lastDay }}</td>
+      </tr>
+    </table>
+
+    <!-- Main salary table -->
+    <table class="salary-table">
+
+      <!-- ═══ Section I ═══ -->
+      <tr class="row-section">
+        <td class="c-desc" colspan="4">I. Salaire de base contractuel (sans indemnités journalières LAA et IJM)</td>
+        <td class="c-amt">à CHF</td>
+      </tr>
+
+      <tr class="row-sub">
+        <td colspan="5">1. Salaire de base (en espèces et en nature)</td>
+      </tr>
+      <tr>
+        <td class="c-desc">1.1 Salaire horaire</td>
+        <td class="c-qty">{{ slip.hoursDisplay }} Temps réel</td>
+        <td class="c-unit">à CHF</td>
+        <td class="c-rate">20.00</td>
+        <td class="c-amt plus">{{ slip.gross | f2 }}</td>
+      </tr>
+      <tr>
+        <td class="c-desc sub">plus Indemnisation pour les vacances</td>
+        <td class="c-qty">0%</td>
+        <td class="c-unit">à CHF</td>
+        <td class="c-rate">0.00</td>
+        <td class="c-amt plus">0.00</td>
+      </tr>
+      <tr>
+        <td class="c-desc" colspan="4">1.2 Autre prestation</td>
+        <td class="c-amt">+0.00</td>
+      </tr>
+
+      <tr class="row-sub">
+        <td colspan="5">2. Autres prestations soumises à cotisation AVS</td>
+      </tr>
+      <tr>
+        <td class="c-desc">2.1 Heures supplémentaires</td>
+        <td class="c-qty">0:00 Heures</td>
+        <td class="c-unit">à CHF</td>
+        <td class="c-rate">20.00</td>
+        <td class="c-amt plus">0.00</td>
+      </tr>
+      <tr>
+        <td class="c-desc">2.2 Indemnité de congés et de vacances</td>
+        <td class="c-qty">0 Jours</td>
+        <td class="c-unit">à CHF</td>
+        <td class="c-rate">200.00</td>
+        <td class="c-amt plus">0.00</td>
+      </tr>
+      <tr>
+        <td class="c-desc" colspan="4">2.3 Prestation APG</td>
+        <td class="c-amt plus">0.00</td>
+      </tr>
+      <tr>
+        <td class="c-desc" colspan="4">2.4 Autres prestations soumises à cotisation AVS</td>
+        <td class="c-amt plus">0.00</td>
+      </tr>
+
+      <tr class="row-total">
+        <td class="c-desc" colspan="4">3. Salaire soumis à cotisation AVS</td>
+        <td class="c-amt">{{ slip.gross | f2 }}</td>
+      </tr>
+
+      <tr>
+        <td class="c-desc" colspan="4">4. Indemnités journalières versées</td>
+        <td class="c-amt plus">0.00</td>
+      </tr>
+
+      <tr class="row-sub">
+        <td colspan="5">5. Autres prestations imposables</td>
+      </tr>
+      <tr class="row-sub2">
+        <td colspan="5">5.1 Allocations familiales (confirmées)</td>
+      </tr>
+      <tr>
+        <td class="c-desc">5.1.1 Allocations familiales</td>
+        <td class="c-qty">0</td>
+        <td class="c-unit">à CHF</td>
+        <td class="c-rate">0.00</td>
+        <td class="c-amt plus">0.00</td>
+      </tr>
+      <tr>
+        <td class="c-desc">5.1.2 Allocations de ménage</td>
+        <td class="c-qty">0</td>
+        <td class="c-unit">à CHF</td>
+        <td class="c-rate">0.00</td>
+        <td class="c-amt plus">0.00</td>
+      </tr>
+      <tr>
+        <td class="c-desc">5.1.3 Allocations de formation</td>
+        <td class="c-qty">0</td>
+        <td class="c-unit">à CHF</td>
+        <td class="c-rate">0.00</td>
+        <td class="c-amt plus">0.00</td>
+      </tr>
+      <tr>
+        <td class="c-desc" colspan="4">5.2 Autres prestations imposables</td>
+        <td class="c-amt plus">0.00</td>
+      </tr>
+
+      <tr class="row-total">
+        <td class="c-desc" colspan="4">6. Revenu imposable</td>
+        <td class="c-amt">{{ slip.gross | f2 }}</td>
+      </tr>
+
+      <tr class="row-sub">
+        <td colspan="5">7. Prestations non imposables</td>
+      </tr>
+      <tr>
+        <td class="c-desc" colspan="4">7.1 Remboursement des frais</td>
+        <td class="c-amt plus">0.00</td>
+      </tr>
+      <tr>
+        <td class="c-desc" colspan="4">7.2 Autres prestations imposables</td>
+        <td class="c-amt plus">0.00</td>
+      </tr>
+
+      <!-- ═══ Section II ═══ -->
+      <tr class="row-section">
+        <td colspan="5">II. Déductions</td>
+      </tr>
+
+      <tr>
+        <td class="c-desc">8. AVS / AI / APG</td>
+        <td class="c-qty">5.3%</td>
+        <td colspan="2"></td>
+        <td class="c-amt minus">{{ slip.avs | f2 }}</td>
+      </tr>
+      <tr>
+        <td class="c-desc">9. Assurance chômage</td>
+        <td class="c-qty">1.1%</td>
+        <td colspan="2"></td>
+        <td class="c-amt minus">{{ slip.chomage | f2 }}</td>
+      </tr>
+      <tr>
+        <td class="c-desc">10. Assurance accident</td>
+        <td class="c-qty">1.607%</td>
+        <td colspan="2"></td>
+        <td class="c-amt minus">{{ slip.accident | f2 }}</td>
+      </tr>
+      <tr>
+        <td class="c-desc">11. Assurance maladie</td>
+        <td class="c-qty">0.00 CHF</td>
+        <td class="c-unit" colspan="2">Franchise: aucune</td>
+        <td class="c-amt minus">0.00</td>
+      </tr>
+      <tr>
+        <td class="c-desc">12. Indemnité journalière de maladie</td>
+        <td class="c-qty">0.47%</td>
+        <td colspan="2"></td>
+        <td class="c-amt minus">{{ slip.ijm | f2 }}</td>
+      </tr>
+      <tr>
+        <td class="c-desc">13. Caisse de pension</td>
+        <td class="c-qty">0%</td>
+        <td colspan="2"></td>
+        <td class="c-amt minus">0.00</td>
+      </tr>
+      <tr>
+        <td class="c-desc">14. Impôt à la source (confirmé)</td>
+        <td class="c-qty">0%</td>
+        <td colspan="2"></td>
+        <td class="c-amt minus">0.00</td>
+      </tr>
+      <tr>
+        <td class="c-desc">14.1. Écriture de correction d'impôt à la source</td>
+        <td class="c-qty">0 Mois</td>
+        <td class="c-unit">à CHF</td>
+        <td class="c-rate">0.00</td>
+        <td class="c-amt minus">0.00</td>
+      </tr>
+
+      <tr class="row-sub">
+        <td colspan="5">15. Salaire en nature</td>
+      </tr>
+      <tr>
+        <td class="c-desc">15.1. Logement/hébergement</td>
+        <td class="c-qty">0 Nuits</td>
+        <td class="c-unit">à CHF</td>
+        <td class="c-rate">11.50</td>
+        <td class="c-amt minus">0.00</td>
+      </tr>
+      <tr class="row-sub2">
+        <td colspan="5">15.2. Indemnité de frais de pension</td>
+      </tr>
+      <tr>
+        <td class="c-desc"></td>
+        <td class="c-qty">0 Petit déjeuner</td>
+        <td class="c-unit">à CHF</td>
+        <td class="c-rate">3.50</td>
+        <td class="c-amt minus">0.00</td>
+      </tr>
+      <tr>
+        <td class="c-desc"></td>
+        <td class="c-qty">0 Repas de midi</td>
+        <td class="c-unit">à CHF</td>
+        <td class="c-rate">10.00</td>
+        <td class="c-amt minus">0.00</td>
+      </tr>
+      <tr>
+        <td class="c-desc"></td>
+        <td class="c-qty">0 Souper</td>
+        <td class="c-unit">à CHF</td>
+        <td class="c-rate">8.00</td>
+        <td class="c-amt minus">0.00</td>
+      </tr>
+      <tr>
+        <td class="c-desc">15.3. Montant forfaitaire</td>
+        <td class="c-qty" colspan="2">Selon l'AVS ou le contrat</td>
+        <td class="c-rate">0.00</td>
+        <td class="c-amt minus">0.00</td>
+      </tr>
+      <tr>
+        <td class="c-desc" colspan="4">16. Avance</td>
+        <td class="c-amt minus">0.00</td>
+      </tr>
+      <tr>
+        <td class="c-desc" colspan="4">17.</td>
+        <td class="c-amt minus">0.00</td>
+      </tr>
+
+      <!-- ═══ Section III ═══ -->
+      <tr class="row-payment">
+        <td class="c-desc" colspan="4">
+          III. Paiement: (compte: {{ slip.employee_name }} {{ slip.employee_iban }})
+        </td>
+        <td class="c-amt">{{ slip.net | f2 }}</td>
+      </tr>
+
+    </table>
+
+    <!-- Signatures -->
+    <div class="signature-section">
+      <div>
+        <div class="sig-place">Lieu, date</div>
+        <div class="sig-name">Signature de l'employeur</div>
+      </div>
+      <div>
+        <div class="sig-place">Lieu, date</div>
+        <div class="sig-name">Signature de l'employé(e)</div>
+      </div>
+    </div>
+
+    <!-- Print button -->
+    <div class="print-btn">
+      <a href="javascript:window.print()">Imprimer</a>
+    </div>
+
+  </div>
+</div>
+<script src="attestation_salaire.js"></script>
+</body>
+</html>

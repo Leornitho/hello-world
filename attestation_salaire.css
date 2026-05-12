@@ -1,0 +1,158 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 9pt;
+  color: #000;
+  background: #e8e8e8;
+}
+
+#app {
+  background: #fff;
+  max-width: 21cm;
+  margin: 1cm auto;
+  padding: 1cm;
+  box-shadow: 0 0 8px rgba(0,0,0,0.2);
+}
+
+.status { color: #c00; padding: 1em; }
+
+/* ── Title ─────────────────────────────────── */
+.slip-title {
+  font-size: 13pt;
+  font-weight: bold;
+  margin-bottom: 8pt;
+}
+.slip-subtitle { font-weight: normal; font-size: 10pt; }
+
+/* ── Header table (employer | employee) ──── */
+.header-table {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1px solid #bbb;
+}
+.header-table td {
+  padding: 2pt 6pt;
+  vertical-align: top;
+}
+.employer-cell {
+  width: 42%;
+  border-right: 1px solid #bbb;
+  vertical-align: top;
+}
+.info-label {
+  font-weight: bold;
+  width: 28%;
+  border-top: 1px solid #ddd;
+}
+.info-label-bold {
+  font-weight: bold;
+  width: 28%;
+}
+.header-table tr.sep td { border-top: 1px solid #ddd; }
+
+/* ── Period bar ─────────────────────────── */
+.period-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: #f2f2f2;
+  border: 1px solid #bbb;
+  border-top: none;
+  margin-bottom: 6pt;
+}
+.period-table td { padding: 3pt 6pt; }
+.period-label { font-weight: bold; width: 20%; }
+.period-value { width: 25%; }
+
+/* ── Main salary table ──────────────────── */
+.salary-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.salary-table td {
+  padding: 1.5pt 4pt;
+  border-bottom: 1px solid #eee;
+  vertical-align: middle;
+}
+
+/* Column widths via classes on td */
+.c-desc { width: 44%; }
+.c-qty  { width: 21%; }
+.c-unit { width: 6%; text-align: center; font-size: 8pt; color: #444; }
+.c-rate { width: 8%; text-align: right; }
+.c-amt  { width: 11%; text-align: right; white-space: nowrap; }
+
+.sub { padding-left: 14pt; }
+
+/* Amount signs */
+.plus::before  { content: '+ '; }
+.minus::before { content: '– '; }
+
+/* Row variants */
+.row-section td {
+  font-weight: bold;
+  background: #e4e4e4;
+  border-top: 1.5px solid #888;
+  border-bottom: 1.5px solid #888;
+  padding-top: 2.5pt;
+  padding-bottom: 2.5pt;
+}
+.row-sub td {
+  font-weight: bold;
+  border-bottom: none;
+  padding-top: 3pt;
+}
+.row-sub2 td {
+  font-style: italic;
+  padding-left: 14pt;
+  border-bottom: none;
+}
+.row-total td {
+  font-weight: bold;
+  border-top: 1.5px solid #555;
+  border-bottom: 2px solid #555;
+}
+.row-payment td {
+  font-weight: bold;
+  background: #f2f2f2;
+  border-top: 2px solid #444;
+  border-bottom: 2px solid #444;
+  padding-top: 2.5pt;
+  padding-bottom: 2.5pt;
+}
+
+/* ── Signature section ──────────────────── */
+.signature-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 3cm;
+  margin-top: 2cm;
+}
+.sig-place { margin-bottom: 1.5cm; font-size: 9pt; }
+.sig-name  {
+  border-top: 1px solid #000;
+  padding-top: 3pt;
+  margin-top: 1.2cm;
+  font-size: 9pt;
+}
+
+/* ── Print button ───────────────────────── */
+.print-btn {
+  margin-top: 12pt;
+  text-align: right;
+}
+.print-btn a {
+  background: #4682B4;
+  color: #fff;
+  text-decoration: none;
+  padding: 0.25em 0.7em;
+  border-radius: 0.4em;
+  font-size: 90%;
+}
+
+/* ── Print media ────────────────────────── */
+@media print {
+  body { background: white; }
+  #app { margin: 0; padding: 0.5cm; box-shadow: none; max-width: 100%; }
+  .print-btn { display: none; }
+}
