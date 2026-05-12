@@ -103,13 +103,13 @@ function updateSlip(row) {
 
     data.slip = {
       employee_name:         emp.name || '',
-      employee_address:      emp.adress || '',
+      employee_address:      emp.address || '',
       employee_city:         emp.city || '',
       employee_nationality:  emp.nationality || 'Suisse',
       employee_civil_status: emp.civil_status || '',
       employee_children:     emp.children != null ? emp.children : 0,
       employee_avs:          emp.avs || '',
-      employee_function:     emp.function || '',
+      employee_function:     emp['function'] || '',
       employee_iban:         emp.iban || '',
       firstDay: monthFirstDay(monthText),
       lastDay:  monthLastDay(monthText),
