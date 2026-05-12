@@ -73,7 +73,7 @@ function buildPivot() {
   for (let i = 0; i < t.id.length; i++) {
     if (!t.harvest_date[i]) continue;
     if (tsToDateStr(t.harvest_date[i]) !== data.selectedDate) continue;
-    const product = String(t.product_format[i] || '?');
+    const product = String(t.H_product_format_name[i] || '?');
     const client  = String(t.H_customer_name[i] || '?');
     const qty     = Number(t.quantity[i])       || 0;
 
