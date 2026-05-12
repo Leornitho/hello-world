@@ -129,9 +129,9 @@ ready(function() {
   grist.ready({
     requiredAccess: 'read table',
     columns: [
-      { name: 'month',    type: 'Int'     },
+      { name: 'month',    type: 'Ref'     },
       { name: 'hours',    type: 'Numeric' },
-      { name: 'employee', type: 'Int'     },
+      { name: 'employee', type: 'Ref'     },
     ],
   });
 
