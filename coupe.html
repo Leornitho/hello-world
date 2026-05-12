@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <title>Coupe du jour</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vue/2.5.3/vue.min.js"></script>
+  <script src="https://docs.getgrist.com/grist-plugin-api.js"></script>
+  <link rel="stylesheet" href="coupe.css">
+</head>
+<body>
+<div id="app">
+
+  <div v-if="status" class="status">{{ status }}</div>
+
+  <template v-if="dates.length > 0">
+
+    <!-- Toolbar -->
+    <div class="toolbar">
+      <label>Date :
+        <select v-model="selectedDate">
+          <option v-for="d in dates" :value="d">{{ d }}</option>
+        </select>
+      </label>
+      <a href="javascript:window.print()" class="print-btn">Imprimer</a>
+    </div>
+
+    <!-- Pivot table -->
+    <div class="table-wrap" v-if="products.length > 0">
+      <table class="pivot-table">
+        <thead>
+          <tr>
+            <th class="col-product">Produit</th>
+            <th v-for="client in clients" class="col-qty">{{ client }}</th>
+            <th class="col-total">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr v-for="product in products">
+            <td class="col-product">{{ product }}</td>
+            <td v-for="client in clients" class="col-qty">{{ qty(product, client) }}</td>
+            <td class="col-total">{{ totalProduct(product) }}</td>
+          </tr>
+        </tbody>
+        <tfoot>
+          <tr>
+            <td class="col-product">Total</td>
+            <td v-for="client in clients" class="col-total">{{ totalClient(client) }}</td>
+            <td class="col-total grand-total">{{ fmtGrand() }}</td>
+          </tr>
+        </tfoot>
+      </table>
+    </div>
+
+  </template>
+
+</div>
+<script src="coupe.js"></script>
+</body>
+</html>

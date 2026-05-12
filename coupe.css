@@ -1,0 +1,119 @@
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 9pt;
+  background: #e8e8e8;
+}
+
+#app {
+  background: #fff;
+  padding: 0.6cm;
+  min-height: 100vh;
+}
+
+.status { color: #c00; padding: 1em; }
+
+/* ── Toolbar ───────────────────────────── */
+.toolbar {
+  display: flex;
+  align-items: center;
+  gap: 1.2em;
+  margin-bottom: 0.8em;
+  flex-wrap: wrap;
+}
+
+.toolbar label {
+  font-weight: bold;
+}
+
+.toolbar select {
+  margin-left: 0.4em;
+  padding: 2pt 4pt;
+  font-size: 9pt;
+  border: 1px solid #bbb;
+  border-radius: 3px;
+}
+
+.print-btn {
+  background: #4682B4;
+  color: #fff;
+  text-decoration: none;
+  padding: 0.2em 0.7em;
+  border-radius: 0.4em;
+  font-size: 90%;
+}
+.print-btn:hover { background: #315f8a; }
+
+/* ── Table wrapper ─────────────────────── */
+.table-wrap { overflow-x: auto; }
+
+/* ── Pivot table ───────────────────────── */
+.pivot-table {
+  border-collapse: collapse;
+  width: 100%;
+  white-space: nowrap;
+}
+
+.pivot-table th,
+.pivot-table td {
+  border: 1px solid #ccc;
+  padding: 2pt 6pt;
+  vertical-align: middle;
+}
+
+/* Header row */
+.pivot-table thead th {
+  background: #d8e4f0;
+  font-weight: bold;
+  text-align: center;
+}
+.pivot-table thead th.col-product {
+  text-align: left;
+}
+
+/* Product column */
+.col-product {
+  text-align: left;
+  min-width: 160px;
+  white-space: normal;
+}
+
+/* Quantity cells */
+.col-qty {
+  text-align: center;
+  min-width: 44px;
+}
+.col-qty:empty { color: #bbb; }
+
+/* Total column */
+.col-total {
+  text-align: center;
+  font-weight: bold;
+  background: #f0f0f0;
+  min-width: 44px;
+}
+
+/* Total row */
+.pivot-table tfoot td {
+  font-weight: bold;
+  background: #e0e8f0;
+  text-align: center;
+}
+.pivot-table tfoot .col-product {
+  text-align: left;
+}
+
+/* Grand total cell */
+.grand-total {
+  background: #c8d8e8 !important;
+}
+
+/* ── Print ─────────────────────────────── */
+@media print {
+  body { background: white; }
+  #app { padding: 0.3cm; min-height: unset; }
+  .print-btn { display: none; }
+  .toolbar select { border: none; font-weight: bold; }
+  .pivot-table th, .pivot-table td { font-size: 8pt; padding: 1.5pt 4pt; }
+}
