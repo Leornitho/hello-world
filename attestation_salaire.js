@@ -39,9 +39,23 @@ function monthLastDay(month) {
 
 function getRowById(table, id) {
   if (!id) return null;
-  if (typeof id === 'object') return id;
+  if (typeof id === 'object') {
+    if (id.rowId) id = id.rowId;
+    else return null;
+  }
   if (!table) return null;
   const idx = table.id.indexOf(id);
+  if (idx === -1) return null;
+  const result = {};
+  for (const col of Object.keys(table)) {
+    result[col] = table[col][idx];
+  }
+  return result;
+}
+
+function getRowByName(table, name) {
+  if (!name || !table || !table.name) return null;
+  const idx = table.name.indexOf(name);
   if (idx === -1) return null;
   const result = {};
   for (const col of Object.keys(table)) {
