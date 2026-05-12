@@ -75,7 +75,7 @@ function buildPivot() {
     if (tsToDateStr(t.harvest_date[i]) !== data.selectedDate) continue;
     const product = String(t.H_product_format_name[i] || '?');
     const client  = String(t.H_customer_name[i] || '?');
-    const qty     = Number(t.quantity[i])       || 0;
+    const qty     = Number(t.quantity_planned[i]) || 0;
 
     productSet.add(product);
     clientSet.add(client);
