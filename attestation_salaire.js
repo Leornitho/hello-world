@@ -37,6 +37,19 @@ function monthLastDay(month) {
   return String(d).padStart(2, '0') + '.' + m + '.' + y;
 }
 
+function getRowById(table, id) {
+  if (!id) return null;
+  if (typeof id === 'object') return id;
+  if (!table) return null;
+  const idx = table.id.indexOf(id);
+  if (idx === -1) return null;
+  const result = {};
+  for (const col of Object.keys(table)) {
+    result[col] = table[col][idx];
+  }
+  return result;
+}
+
 function ready(fn) {
   if (document.readyState !== 'loading') fn();
   else document.addEventListener('DOMContentLoaded', fn);
@@ -48,10 +61,25 @@ Vue.filter('f2', function(n) {
 
 const data = { slip: null, status: 'En attente…' };
 let app;
+let heuresAliciaTable = null;
+let currentRow = null;
+let currentMapping = null;
+
+async function fetchHeuresAlicia() {
+  try {
+    heuresAliciaTable = await grist.docApi.fetchTable('Heures_Alicia');
+  } catch(e) {
+    console.error('fetchHeuresAlicia failed:', e);
+  }
+}
 
 function updateSlip(row) {
   try {
     if (!row) { data.slip = null; data.status = 'En attente…'; return; }
+
+    // Resolve the month reference to get the "2026-04" text value.
+    const monthRow = getRowById(heuresAliciaTable, row.month);
+    const monthText = monthRow ? (monthRow.month || '') : String(row.month || '');
 
     const hours   = parseHours(row.hours);
     const gross   = r2(hours * HOURLY_RATE);
@@ -72,8 +100,8 @@ function updateSlip(row) {
       employee_avs:          row.employee_avs || '',
       employee_function:     row.employee_function || '',
       employee_iban:         row.employee_iban || '',
-      firstDay: monthFirstDay(row.month),
-      lastDay:  monthLastDay(row.month),
+      firstDay: monthFirstDay(monthText),
+      lastDay:  monthLastDay(monthText),
       hours,
       hoursDisplay: fmtHours(hours),
       gross, avs, chomage, accident, ijm, totalDed, net,
@@ -90,7 +118,7 @@ ready(function() {
   grist.ready({
     requiredAccess: 'read table',
     columns: [
-      { name: 'month',                 type: 'Text'    },
+      { name: 'month',                 type: 'Int'     },
       { name: 'hours',                 type: 'Numeric' },
       { name: 'employee_name',         type: 'Text'    },
       { name: 'employee_address',      type: 'Text'    },
@@ -104,10 +132,26 @@ ready(function() {
     ],
   });
 
+  fetchHeuresAlicia();
+
   grist.onRecord((row, mapping) => {
+    currentRow = row;
+    currentMapping = mapping;
     const mapped = grist.mapColumnNames(row, mapping);
     if (mapped) Object.assign(row, mapped);
-    updateSlip(row);
+    if (!heuresAliciaTable) {
+      fetchHeuresAlicia().then(() => updateSlip(row));
+    } else {
+      updateSlip(row);
+    }
+  });
+
+  grist.on('message', msg => {
+    if (msg.dataChange) {
+      fetchHeuresAlicia().then(() => {
+        if (currentRow) updateSlip(currentRow, currentMapping);
+      });
+    }
   });
 
   app = new Vue({ el: '#app', data });
