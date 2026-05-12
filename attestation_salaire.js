@@ -76,7 +76,7 @@ async function fetchHeuresAlicia() {
 
 async function fetchEmployees() {
   try {
-    employeesTable = await grist.docApi.fetchTable('employees');
+    employeesTable = await grist.docApi.fetchTable('Employees');
   } catch(e) {
     console.error('fetchEmployees failed:', e);
   }
