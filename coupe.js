@@ -53,7 +53,8 @@ function buildPivot() {
   // Collect unique dates
   const dateSet = new Set();
   for (let i = 0; i < t.id.length; i++) {
-    const d = tsToDateStr(t.date[i]);
+    if (!t.harvest_date[i]) continue;
+    const d = tsToDateStr(t.harvest_date[i]);
     if (d) dateSet.add(d);
   }
   const sortedDates = Array.from(dateSet).sort().reverse();
@@ -70,7 +71,8 @@ function buildPivot() {
   const pivot      = {};
 
   for (let i = 0; i < t.id.length; i++) {
-    if (tsToDateStr(t.date[i]) !== data.selectedDate) continue;
+    if (!t.harvest_date[i]) continue;
+    if (tsToDateStr(t.harvest_date[i]) !== data.selectedDate) continue;
     const product = String(t.product_format[i] || '?');
     const client  = String(t.client[i]         || '?');
     const qty     = Number(t.quantity[i])       || 0;
