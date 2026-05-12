@@ -91,7 +91,6 @@ async function fetchHeuresAlicia() {
 async function fetchEmployees() {
   try {
     employeesTable = await grist.docApi.fetchTable('Employees');
-    console.log('Employees fetched, columns:', Object.keys(employeesTable));
   } catch(e) {
     console.error('fetchEmployees failed:', e);
     data.status = 'Erreur: impossible de charger la table Employees — ' + e.message;
@@ -102,14 +101,12 @@ function updateSlip(row) {
   try {
     if (!row) { data.slip = null; data.status = 'En attente…'; return; }
 
-    console.log('row.employee:', row.employee, 'employeesTable ready:', !!employeesTable);
 
     // Resolve the month reference to get the "2026-04" text value.
     const monthRow = getRowById(heuresAliciaTable, row.month);
     const monthText = monthRow ? (monthRow.month || '') : String(row.month || '');
 
     const emp = getRowById(employeesTable, row.employee) || {};
-    console.log('emp row:', JSON.stringify(emp));
 
     const hours   = parseHours(row.hours);
     const gross   = r2(hours * HOURLY_RATE);
