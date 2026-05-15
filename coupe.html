@@ -33,6 +33,11 @@
             <th v-for="client in clients" class="col-qty">{{ client }}</th>
             <th class="col-total">Total</th>
           </tr>
+          <tr class="row-notes">
+            <td class="col-product note-label">Note</td>
+            <td v-for="client in clients" class="col-qty note-cell">{{ notes[client] || '' }}</td>
+            <td class="col-total"></td>
+          </tr>
         </thead>
         <tbody>
           <tr v-for="product in products">

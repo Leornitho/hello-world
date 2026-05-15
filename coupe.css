@@ -94,6 +94,19 @@ body {
   min-width: 44px;
 }
 
+/* Notes row */
+.row-notes td {
+  background: #eef2f7;
+  font-style: italic;
+  font-size: 8pt;
+  color: #555;
+  white-space: normal;
+}
+.row-notes .note-label {
+  font-weight: bold;
+  font-style: normal;
+}
+
 /* Zebra striping */
 .pivot-table tbody tr:nth-child(even) td {
   background: #f5f5f5;

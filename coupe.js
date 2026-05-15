@@ -42,6 +42,7 @@ const data = {
   clients: [],
   pivot: {},
   pivotMax: {},
+  notes: {},
   totalsPerClient: {},
   totalsPerProduct: {},
   grandTotal: 0,
@@ -71,6 +72,7 @@ function buildPivot() {
   const clientSet  = new Set();
   const pivot      = {};
   const pivotMax   = {};
+  const notes      = {};
 
   for (let i = 0; i < t.id.length; i++) {
     if (!t.harvest_date[i]) continue;
@@ -86,12 +88,14 @@ function buildPivot() {
     if (!pivotMax[product]) pivotMax[product] = {};
     pivot[product][client]    = (pivot[product][client]    || 0) + qty;
     pivotMax[product][client] = (pivotMax[product][client] || 0) + maxQty;
+    if (!notes[client] && t.H_delivery_note[i]) notes[client] = String(t.H_delivery_note[i]);
   }
 
   data.products = Array.from(productSet).sort((a, b) => a.localeCompare(b, 'fr'));
   data.clients  = Array.from(clientSet).sort((a, b) => a.localeCompare(b, 'fr'));
   data.pivot    = pivot;
   data.pivotMax = pivotMax;
+  data.notes    = notes;
 
   // Totals
   const totalsPerClient  = {};
