@@ -91,7 +91,11 @@ async function fetchCotisations() {
 
 function getCotisationsForEmployee(empId) {
   if (!cotisationsTable || !empId) return null;
-  const idx = cotisationsTable.employees.indexOf(empId);
+  const numId = typeof empId === 'object' ? empId.rowId : Number(empId);
+  const idx = cotisationsTable.employees.findIndex(v => {
+    const vId = typeof v === 'object' ? v.rowId : Number(v);
+    return vId === numId;
+  });
   if (idx === -1) return null;
   const result = {};
   for (const col of Object.keys(cotisationsTable)) result[col] = cotisationsTable[col][idx];
