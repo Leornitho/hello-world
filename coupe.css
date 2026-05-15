@@ -94,6 +94,14 @@ body {
   min-width: 44px;
 }
 
+/* Zebra striping */
+.pivot-table tbody tr:nth-child(even) td {
+  background: #f5f5f5;
+}
+.pivot-table tbody tr:nth-child(even) .col-total {
+  background: #e8e8e8;
+}
+
 /* Total row */
 .pivot-table tfoot td {
   font-weight: bold;
