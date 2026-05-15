@@ -41,6 +41,7 @@ const data = {
   products: [],
   clients: [],
   pivot: {},
+  pivotMax: {},
   totalsPerClient: {},
   totalsPerProduct: {},
   grandTotal: 0,
@@ -69,6 +70,7 @@ function buildPivot() {
   const productSet = new Set();
   const clientSet  = new Set();
   const pivot      = {};
+  const pivotMax   = {};
 
   for (let i = 0; i < t.id.length; i++) {
     if (!t.harvest_date[i]) continue;
@@ -76,16 +78,20 @@ function buildPivot() {
     const product = String(t.H_product_format_name[i] || '?');
     const client  = String(t.H_order_id[i] || '?');
     const qty     = Number(t.quantity_planned[i]) || 0;
+    const maxQty  = Number(t.quantity_max[i]) || 0;
 
     productSet.add(product);
     clientSet.add(client);
-    if (!pivot[product]) pivot[product] = {};
-    pivot[product][client] = (pivot[product][client] || 0) + qty;
+    if (!pivot[product])    pivot[product]    = {};
+    if (!pivotMax[product]) pivotMax[product] = {};
+    pivot[product][client]    = (pivot[product][client]    || 0) + qty;
+    pivotMax[product][client] = (pivotMax[product][client] || 0) + maxQty;
   }
 
   data.products = Array.from(productSet).sort((a, b) => a.localeCompare(b, 'fr'));
   data.clients  = Array.from(clientSet).sort((a, b) => a.localeCompare(b, 'fr'));
   data.pivot    = pivot;
+  data.pivotMax = pivotMax;
 
   // Totals
   const totalsPerClient  = {};
@@ -127,8 +133,11 @@ ready(function() {
     },
     methods: {
       qty(product, client) {
-        const q = this.pivot[product] && this.pivot[product][client];
-        return fmtQty(q || 0);
+        const q = (this.pivot[product]    && this.pivot[product][client])    || 0;
+        const m = (this.pivotMax[product] && this.pivotMax[product][client]) || 0;
+        const base = fmtQty(q);
+        if (!base) return '';
+        return m ? base + ' (max ' + fmtTotal(m) + ')' : base;
       },
       totalProduct(product) {
         return fmtTotal(this.totalsPerProduct[product] || 0);
