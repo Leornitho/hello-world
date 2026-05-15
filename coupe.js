@@ -74,7 +74,7 @@ function buildPivot() {
     if (!t.harvest_date[i]) continue;
     if (tsToDateStr(t.harvest_date[i]) !== data.selectedDate) continue;
     const product = String(t.H_product_format_name[i] || '?');
-    const client  = String(t.H_customer_name[i] || '?');
+    const client  = String(t.H_order_id[i] || '?');
     const qty     = Number(t.quantity_planned[i]) || 0;
 
     productSet.add(product);
@@ -84,7 +84,7 @@ function buildPivot() {
   }
 
   data.products = Array.from(productSet).sort((a, b) => a.localeCompare(b, 'fr'));
-  data.clients  = Array.from(clientSet).sort((a, b)  => a.localeCompare(b, 'fr'));
+  data.clients  = Array.from(clientSet).sort((a, b) => a.localeCompare(b, 'fr'));
   data.pivot    = pivot;
 
   // Totals
