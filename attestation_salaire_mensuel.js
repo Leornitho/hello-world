@@ -62,19 +62,10 @@ Vue.filter('f2', function(n) {
 
 const data = { slip: null, status: 'En attente…' };
 let app;
-let heuresAliciaTable = null;
 let employeesTable = null;
 let cotisationsTable = null;
 let currentRow = null;
 let currentMapping = null;
-
-async function fetchHeuresAlicia() {
-  try {
-    heuresAliciaTable = await grist.docApi.fetchTable('Heures_Alicia');
-  } catch(e) {
-    console.error('fetchHeuresAlicia failed:', e);
-  }
-}
 
 async function fetchCotisations() {
   try {
@@ -107,8 +98,7 @@ function updateSlip(row) {
   try {
     if (!row) { data.slip = null; data.status = 'En attente…'; return; }
 
-    const monthRow = getRowById(heuresAliciaTable, row.month);
-    const monthText = monthRow ? (monthRow.month || '') : String(row.month || '');
+    const monthText = String(row.month || '');
 
     let empId = row.employee;
     if (typeof empId === 'object' && empId && empId.rowId) empId = empId.rowId;
@@ -163,14 +153,13 @@ ready(function() {
   grist.ready({
     requiredAccess: 'read table',
     columns: [
-      { name: 'month',          type: 'Ref'     },
+      { name: 'month',          type: 'Text'    },
       { name: 'hours',          type: 'Numeric' },
       { name: 'employee',       type: 'Ref'     },
       { name: 'monthly_salary', type: 'Numeric' },
     ],
   });
 
-  fetchHeuresAlicia();
   fetchEmployees();
   fetchCotisations();
 
@@ -179,12 +168,11 @@ ready(function() {
     currentMapping = mapping;
     const mapped = grist.mapColumnNames(row, mapping);
     if (mapped) Object.assign(row, mapped);
-    const allReady = heuresAliciaTable && employeesTable && cotisationsTable;
+    const allReady = employeesTable && cotisationsTable;
     if (!allReady) {
       Promise.all([
-        heuresAliciaTable  ? Promise.resolve() : fetchHeuresAlicia(),
-        employeesTable     ? Promise.resolve() : fetchEmployees(),
-        cotisationsTable   ? Promise.resolve() : fetchCotisations(),
+        employeesTable   ? Promise.resolve() : fetchEmployees(),
+        cotisationsTable ? Promise.resolve() : fetchCotisations(),
       ]).then(() => updateSlip(row));
     } else {
       updateSlip(row);
@@ -193,7 +181,7 @@ ready(function() {
 
   grist.on('message', msg => {
     if (msg.dataChange) {
-      Promise.all([fetchHeuresAlicia(), fetchEmployees(), fetchCotisations()]).then(() => {
+      Promise.all([fetchEmployees(), fetchCotisations()]).then(() => {
         if (currentRow) updateSlip(currentRow);
       });
     }
