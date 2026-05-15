@@ -136,7 +136,8 @@ ready(function() {
         const q = (this.pivot[product]    && this.pivot[product][client])    || 0;
         const m = (this.pivotMax[product] && this.pivotMax[product][client]) || 0;
         const base = fmtQty(q);
-        if (!base) return '';
+        if (!base && !m) return '';
+        if (!base) return '(max ' + fmtTotal(m) + ')';
         return m ? base + ' (max ' + fmtTotal(m) + ')' : base;
       },
       totalProduct(product) {
