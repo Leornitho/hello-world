@@ -1,11 +1,3 @@
-const HOURLY_RATE = 20.00;
-
-const RATES = {
-  avs:      0.0530,
-  chomage:  0.0110,
-  accident: 0.01607,
-  ijm:      0.0047,
-};
 
 function r2(n) { return Math.round(n * 100) / 100; }
 
@@ -77,6 +69,7 @@ const data = { slip: null, status: 'En attente…' };
 let app;
 let heuresAliciaTable = null;
 let employeesTable = null;
+let cotisationsTable = null;
 let currentRow = null;
 let currentMapping = null;
 
@@ -86,6 +79,23 @@ async function fetchHeuresAlicia() {
   } catch(e) {
     console.error('fetchHeuresAlicia failed:', e);
   }
+}
+
+async function fetchCotisations() {
+  try {
+    cotisationsTable = await grist.docApi.fetchTable('Cotisations');
+  } catch(e) {
+    console.error('fetchCotisations failed:', e);
+  }
+}
+
+function getCotisationsForEmployee(empId) {
+  if (!cotisationsTable || !empId) return null;
+  const idx = cotisationsTable.employees.indexOf(empId);
+  if (idx === -1) return null;
+  const result = {};
+  for (const col of Object.keys(cotisationsTable)) result[col] = cotisationsTable[col][idx];
+  return result;
 }
 
 async function fetchEmployees() {
@@ -106,14 +116,25 @@ function updateSlip(row) {
     const monthRow = getRowById(heuresAliciaTable, row.month);
     const monthText = monthRow ? (monthRow.month || '') : String(row.month || '');
 
-    const emp = getRowById(employeesTable, row.employee) || {};
+    // Extract numeric employee row ID for table lookups.
+    let empId = row.employee;
+    if (typeof empId === 'object' && empId && empId.rowId) empId = empId.rowId;
+
+    const emp   = getRowById(employeesTable, empId)  || {};
+    const cotis = getCotisationsForEmployee(empId)   || {};
+
+    const hourlyRate  = emp.hour_salary_brutto || 0;
+    const avsRate     = (cotis.AVS_AI_APG || 0) / 100;
+    const chomageRate = (cotis.chomage     || 0) / 100;
+    const accidentRate= (cotis.accident    || 0) / 100;
+    const ijmRate     = (cotis.IJJ         || 0) / 100;
 
     const hours   = parseHours(row.hours);
-    const gross   = r2(hours * HOURLY_RATE);
-    const avs     = r2(gross * RATES.avs);
-    const chomage = r2(gross * RATES.chomage);
-    const accident= r2(gross * RATES.accident);
-    const ijm     = r2(gross * RATES.ijm);
+    const gross   = r2(hours * hourlyRate);
+    const avs     = r2(gross * avsRate);
+    const chomage = r2(gross * chomageRate);
+    const accident= r2(gross * accidentRate);
+    const ijm     = r2(gross * ijmRate);
     const totalDed= r2(avs + chomage + accident + ijm);
     const net     = r2(gross - totalDed);
 
@@ -132,6 +153,11 @@ function updateSlip(row) {
       hours,
       hoursDisplay: fmtHours(hours),
       gross, avs, chomage, accident, ijm, totalDed, net,
+      hourlyRate,
+      avsRatePct:      cotis.AVS_AI_APG || 0,
+      chomageRatePct:  cotis.chomage     || 0,
+      accidentRatePct: cotis.accident    || 0,
+      ijmRatePct:      cotis.IJJ         || 0,
     };
     data.status = '';
   } catch(e) {
@@ -153,17 +179,19 @@ ready(function() {
 
   fetchHeuresAlicia();
   fetchEmployees();
+  fetchCotisations();
 
   grist.onRecord((row, mapping) => {
     currentRow = row;
     currentMapping = mapping;
     const mapped = grist.mapColumnNames(row, mapping);
     if (mapped) Object.assign(row, mapped);
-    const allReady = heuresAliciaTable && employeesTable;
+    const allReady = heuresAliciaTable && employeesTable && cotisationsTable;
     if (!allReady) {
       Promise.all([
-        heuresAliciaTable ? Promise.resolve() : fetchHeuresAlicia(),
-        employeesTable    ? Promise.resolve() : fetchEmployees(),
+        heuresAliciaTable  ? Promise.resolve() : fetchHeuresAlicia(),
+        employeesTable     ? Promise.resolve() : fetchEmployees(),
+        cotisationsTable   ? Promise.resolve() : fetchCotisations(),
       ]).then(() => updateSlip(row));
     } else {
       updateSlip(row);
@@ -172,7 +200,7 @@ ready(function() {
 
   grist.on('message', msg => {
     if (msg.dataChange) {
-      Promise.all([fetchHeuresAlicia(), fetchEmployees()]).then(() => {
+      Promise.all([fetchHeuresAlicia(), fetchEmployees(), fetchCotisations()]).then(() => {
         if (currentRow) updateSlip(currentRow);
       });
     }

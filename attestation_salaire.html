@@ -88,7 +88,7 @@
         <td class="c-desc">1.1 Salaire horaire</td>
         <td class="c-qty">{{ slip.hoursDisplay }} Temps réel</td>
         <td class="c-unit">à CHF</td>
-        <td class="c-rate">20.00</td>
+        <td class="c-rate">{{ slip.hourlyRate | f2 }}</td>
         <td class="c-amt plus">{{ slip.gross | f2 }}</td>
       </tr>
       <tr>
@@ -195,19 +195,19 @@
 
       <tr>
         <td class="c-desc">8. AVS / AI / APG</td>
-        <td class="c-qty">5.3%</td>
+        <td class="c-qty">{{ slip.avsRatePct }}%</td>
         <td colspan="2"></td>
         <td class="c-amt minus">{{ slip.avs | f2 }}</td>
       </tr>
       <tr>
         <td class="c-desc">9. Assurance chômage</td>
-        <td class="c-qty">1.1%</td>
+        <td class="c-qty">{{ slip.chomageRatePct }}%</td>
         <td colspan="2"></td>
         <td class="c-amt minus">{{ slip.chomage | f2 }}</td>
       </tr>
       <tr>
         <td class="c-desc">10. Assurance accident</td>
-        <td class="c-qty">1.607%</td>
+        <td class="c-qty">{{ slip.accidentRatePct }}%</td>
         <td colspan="2"></td>
         <td class="c-amt minus">{{ slip.accident | f2 }}</td>
       </tr>
@@ -219,7 +219,7 @@
       </tr>
       <tr>
         <td class="c-desc">12. Indemnité journalière de maladie</td>
-        <td class="c-qty">0.47%</td>
+        <td class="c-qty">{{ slip.ijmRatePct }}%</td>
         <td colspan="2"></td>
         <td class="c-amt minus">{{ slip.ijm | f2 }}</td>
       </tr>
