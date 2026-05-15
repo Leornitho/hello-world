@@ -99,6 +99,7 @@ function updateSlip(row) {
     if (!row) { data.slip = null; data.status = 'En attente…'; return; }
 
     const monthText = String(row.month || '');
+    console.log('row.month raw:', row.month, 'monthText:', monthText, 'firstDay:', monthFirstDay(monthText));
 
     let empId = row.employee;
     if (typeof empId === 'object' && empId && empId.rowId) empId = empId.rowId;
