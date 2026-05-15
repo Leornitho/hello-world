@@ -56,6 +56,11 @@ function getRowByName(table, name) {
   return result;
 }
 
+function fmtIban(iban) {
+  if (!iban) return '';
+  return iban.replace(/\s+/g, '').match(/.{1,4}/g).join(' ');
+}
+
 function ready(fn) {
   if (document.readyState !== 'loading') fn();
   else document.addEventListener('DOMContentLoaded', fn);
@@ -154,7 +159,7 @@ function updateSlip(row) {
       employee_children:     emp.children != null ? emp.children : 0,
       employee_avs:          emp.avs || '',
       employee_function:     emp['function'] || '',
-      employee_iban:         emp.iban || '',
+      employee_iban:         fmtIban(emp.iban || ''),
       firstDay: monthFirstDay(monthText),
       lastDay:  monthLastDay(monthText),
       hours,

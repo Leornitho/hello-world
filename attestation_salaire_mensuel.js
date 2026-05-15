@@ -45,6 +45,11 @@ function getRowById(table, id) {
   return result;
 }
 
+function fmtIban(iban) {
+  if (!iban) return '';
+  return iban.replace(/\s+/g, '').match(/.{1,4}/g).join(' ');
+}
+
 function refId(v) {
   if (Array.isArray(v)) return v[1];
   if (typeof v === 'object' && v) return v.rowId;
@@ -99,7 +104,6 @@ function updateSlip(row) {
     if (!row) { data.slip = null; data.status = 'En attente…'; return; }
 
     const monthText = String(row.month || '');
-    console.log('row.month raw:', row.month, 'monthText:', monthText, 'firstDay:', monthFirstDay(monthText));
 
     let empId = row.employee;
     if (typeof empId === 'object' && empId && empId.rowId) empId = empId.rowId;
@@ -132,7 +136,7 @@ function updateSlip(row) {
       employee_children:     emp.children != null ? emp.children : 0,
       employee_avs:          emp.avs || '',
       employee_function:     emp['function'] || '',
-      employee_iban:         emp.iban || '',
+      employee_iban:         fmtIban(emp.iban || ''),
       firstDay: monthFirstDay(monthText),
       lastDay:  monthLastDay(monthText),
       hoursDisplay: fmtHours(hours),
