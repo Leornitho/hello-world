@@ -94,6 +94,24 @@ body {
   min-width: 44px;
 }
 
+/* Notes column (per product) */
+.col-notes {
+  text-align: left;
+  font-size: 8pt;
+  color: #555;
+  font-style: italic;
+  white-space: normal;
+  min-width: 120px;
+  padding: 2pt 6pt;
+}
+thead .col-notes {
+  font-style: normal;
+  font-weight: bold;
+  color: inherit;
+  background: #d8e4f0;
+  text-align: center;
+}
+
 /* Notes row */
 .row-notes td {
   background: #eef2f7;
