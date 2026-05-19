@@ -18,7 +18,7 @@
     <div class="toolbar">
       <label>Date :
         <select v-model="selectedDate">
-          <option v-for="d in dates" :value="d">{{ d }}</option>
+          <option v-for="d in dates" :value="d">{{ fmtDateOption(d) }}</option>
         </select>
       </label>
       <a href="javascript:window.print()" class="print-btn">Imprimer</a>

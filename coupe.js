@@ -153,6 +153,11 @@ ready(function() {
       selectedDate: function() { buildPivot(); }
     },
     methods: {
+      fmtDateOption(d) {
+        const days = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
+        const [y, m, day] = d.split('-').map(Number);
+        return d + ' – ' + days[new Date(y, m - 1, day).getDay()];
+      },
       qty(product, client) {
         const q = (this.pivot[product]    && this.pivot[product][client])    || 0;
         const m = (this.pivotMax[product] && this.pivotMax[product][client]) || 0;
