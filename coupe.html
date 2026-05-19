@@ -32,21 +32,21 @@
             <th class="col-product">Produit</th>
             <th class="col-total">Total</th>
             <th v-for="client in clients" class="col-qty">{{ client }}</th>
-            <th class="col-notes">Notes</th>
           </tr>
           <tr class="row-notes">
             <td class="col-product note-label">Note</td>
             <td class="col-total"></td>
             <td v-for="client in clients" class="col-qty note-cell">{{ notes[client] || '' }}</td>
-            <td class="col-notes"></td>
           </tr>
         </thead>
         <tbody>
           <tr v-for="product in products">
             <td class="col-product">{{ product }}</td>
             <td class="col-total">{{ totalProduct(product) }}</td>
-            <td v-for="client in clients" class="col-qty">{{ qty(product, client) }}</td>
-            <td class="col-notes">{{ notesPerProduct[product] || '' }}</td>
+            <td v-for="client in clients" class="col-qty">
+              {{ qty(product, client) }}
+              <div v-if="pivotNotes[product] && pivotNotes[product][client]" class="cell-note">{{ pivotNotes[product][client] }}</div>
+            </td>
           </tr>
         </tbody>
         <tfoot>
@@ -54,7 +54,6 @@
             <td class="col-product">Total</td>
             <td class="col-total grand-total">{{ fmtGrand() }}</td>
             <td v-for="client in clients" class="col-total">{{ totalClient(client) }}</td>
-            <td class="col-notes"></td>
           </tr>
         </tfoot>
       </table>

@@ -43,7 +43,7 @@ const data = {
   pivot: {},
   pivotMax: {},
   notes: {},
-  notesPerProduct: {},
+  pivotNotes: {},
   totalsPerClient: {},
   totalsPerProduct: {},
   grandTotal: 0,
@@ -74,7 +74,7 @@ function buildPivot() {
   const pivot           = {};
   const pivotMax        = {};
   const notes           = {};
-  const noteAccumulator = {}; // product -> Set of "Customer: note" strings
+  const noteAccumulator = {}; // product -> client -> Set of note strings
 
   for (let i = 0; i < t.id.length; i++) {
     if (!t.harvest_date[i]) continue;
@@ -93,10 +93,9 @@ function buildPivot() {
     if (!notes[client] && t.H_delivery_note[i]) notes[client] = String(t.H_delivery_note[i]);
     const rowNote = String(t.note[i] || '').trim();
     if (rowNote) {
-      const customer = String(t.H_customer_name[i] || '').trim();
-      const entry = customer ? customer + ': ' + rowNote : rowNote;
-      if (!noteAccumulator[product]) noteAccumulator[product] = new Set();
-      noteAccumulator[product].add(entry);
+      if (!noteAccumulator[product])         noteAccumulator[product]         = {};
+      if (!noteAccumulator[product][client]) noteAccumulator[product][client] = new Set();
+      noteAccumulator[product][client].add(rowNote);
     }
   }
 
@@ -104,12 +103,16 @@ function buildPivot() {
   data.clients  = Array.from(clientSet).sort((a, b) => a.localeCompare(b, 'fr'));
   data.pivot    = pivot;
   data.pivotMax = pivotMax;
-  data.notes    = notes;
-  const notesPerProduct = {};
+  data.notes = notes;
+  const pivotNotes = {};
   for (const p of Array.from(productSet)) {
-    notesPerProduct[p] = noteAccumulator[p] ? Array.from(noteAccumulator[p]).join(' / ') : '';
+    pivotNotes[p] = {};
+    for (const c of Array.from(clientSet)) {
+      if (noteAccumulator[p] && noteAccumulator[p][c])
+        pivotNotes[p][c] = Array.from(noteAccumulator[p][c]).join(' / ');
+    }
   }
-  data.notesPerProduct = notesPerProduct;
+  data.pivotNotes = pivotNotes;
 
   // Totals
   const totalsPerClient  = {};
