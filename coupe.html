@@ -43,7 +43,7 @@
           <tr v-for="product in products">
             <td class="col-product">{{ product }}</td>
             <td class="col-total">{{ totalProduct(product) }}</td>
-            <td v-for="client in clients" class="col-qty">
+            <td v-for="client in clients" class="col-qty" :class="pivotStatus[product] && pivotStatus[product][client]">
               {{ qty(product, client) }}
               <div v-if="pivotNotes[product] && pivotNotes[product][client]" class="cell-note">{{ pivotNotes[product][client] }}</div>
             </td>

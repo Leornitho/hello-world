@@ -44,6 +44,7 @@ const data = {
   pivotMax: {},
   notes: {},
   pivotNotes: {},
+  pivotStatus: {},
   totalsPerClient: {},
   totalsPerProduct: {},
   grandTotal: 0,
@@ -73,6 +74,7 @@ function buildPivot() {
   const clientSet  = new Set();
   const pivot           = {};
   const pivotMax        = {};
+  const pivotActual     = {};
   const notes           = {};
   const noteAccumulator = {}; // product -> client -> Set of note strings
 
@@ -83,13 +85,16 @@ function buildPivot() {
     const client  = String(t.H_order_id[i] || '?');
     const qty     = Number(t.quantity_planned[i]) || 0;
     const maxQty  = Number(t.quantity_max[i]) || 0;
+    const actual  = Number(t.quantity[i]) || 0;
 
     productSet.add(product);
     clientSet.add(client);
-    if (!pivot[product])    pivot[product]    = {};
-    if (!pivotMax[product]) pivotMax[product] = {};
-    pivot[product][client]    = (pivot[product][client]    || 0) + qty;
-    pivotMax[product][client] = (pivotMax[product][client] || 0) + maxQty;
+    if (!pivot[product])         pivot[product]         = {};
+    if (!pivotMax[product])      pivotMax[product]      = {};
+    if (!pivotActual[product])   pivotActual[product]   = {};
+    pivot[product][client]         = (pivot[product][client]         || 0) + qty;
+    pivotMax[product][client]      = (pivotMax[product][client]      || 0) + maxQty;
+    pivotActual[product][client]   = (pivotActual[product][client]   || 0) + actual;
     if (!notes[client] && t.H_delivery_note[i]) notes[client] = String(t.H_delivery_note[i]);
     const rowNote = String(t.note[i] || '').trim();
     if (rowNote) {
@@ -113,6 +118,19 @@ function buildPivot() {
     }
   }
   data.pivotNotes = pivotNotes;
+
+  const pivotStatus = {};
+  for (const p of Array.from(productSet)) {
+    pivotStatus[p] = {};
+    for (const c of Array.from(clientSet)) {
+      const actual  = (pivotActual[p] && pivotActual[p][c]) || 0;
+      const planned = (pivot[p]       && pivot[p][c])       || 0;
+      const max     = (pivotMax[p]    && pivotMax[p][c])    || 0;
+      if (max > 0 && actual > max)          pivotStatus[p][c] = 'cell-red';
+      else if (planned > 0 && actual >= planned) pivotStatus[p][c] = 'cell-green';
+    }
+  }
+  data.pivotStatus = pivotStatus;
 
   // Totals
   const totalsPerClient  = {};

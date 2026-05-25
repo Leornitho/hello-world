@@ -94,6 +94,10 @@ body {
   min-width: 44px;
 }
 
+/* Cell status colours */
+.cell-green { background: #d6f0d6 !important; }
+.cell-red   { background: #f8d7da !important; }
+
 /* Inline note inside a qty cell */
 .cell-note {
   font-style: italic;
