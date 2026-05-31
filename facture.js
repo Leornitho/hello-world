@@ -367,12 +367,15 @@ ready(function() {
         html2pdf().set({
           margin:      10,
           filename,
-          html2canvas: { scale: 2, useCORS: true, logging: false },
+          html2canvas: {
+            scale: 2, useCORS: true, logging: false,
+            ignoreElements: el => el.classList && (
+              el.classList.contains('mode-toggle') ||
+              el.classList.contains('print')
+            ),
+          },
           jsPDF:       { unit: 'mm', format: 'a4', orientation: 'portrait' },
-          ignoreElements: el => el.classList && (
-            el.classList.contains('mode-toggle') ||
-            el.classList.contains('print')
-          ),
+          pagebreak:   { mode: 'css', avoid: '.swiss-qr-bill' },
         }).from(document.querySelector('.invoice')).save().then(() => {
           const a = document.createElement('a');
           a.href = 'mailto:' + encodeURIComponent(modal.to)
