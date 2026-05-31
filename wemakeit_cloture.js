@@ -51,7 +51,9 @@ const data = {
 ready(function() {
   grist.ready({ requiredAccess: 'full' });
 
-  fetchBackers().then(() => { if (app) app.people = buildPeople(); });
+  grist.onOptions(function() {
+    fetchBackers().then(() => { if (app) app.people = buildPeople(); });
+  });
 
   grist.on('message', msg => {
     if (msg.dataChange) {
