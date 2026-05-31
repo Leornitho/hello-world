@@ -59,6 +59,7 @@ const data = {
   invoice: '',
   status: '',
   displayMode: 'detailed',
+  emailModal: { visible: false, to: '', from: '', body: '' },
 };
 let app = undefined;
 
@@ -343,6 +344,42 @@ ready(function() {
     methods: {
       toggleMode() {
         this.displayMode = this.displayMode === 'detailed' ? 'summary' : 'detailed';
+      },
+      openEmailModal() {
+        const inv = this.invoice;
+        const customerEmail = inv.customer && typeof inv.customer === 'object' ? (inv.customer.email || '') : '';
+        const storeEmail    = inv.store    && typeof inv.store    === 'object' ? (inv.store.email    || '') : '';
+        this.emailModal = {
+          visible: true,
+          to:   customerEmail,
+          from: storeEmail,
+          body: 'Bonjour, voici la facture pour les dernières commandes, à payer dans les 30 jours. Merci beaucoup, La Ferme Chautems',
+        };
+      },
+      confirmSendEmail() {
+        const modal    = Object.assign({}, this.emailModal);
+        this.emailModal.visible = false;
+
+        const inv      = this.invoice;
+        const filename = 'facture_' + (inv.invoice_id || 'export') + '.pdf';
+        const subject  = 'Facture ' + (inv.invoice_id || '');
+
+        html2pdf().set({
+          margin:      10,
+          filename,
+          html2canvas: { scale: 2, useCORS: true, logging: false },
+          jsPDF:       { unit: 'mm', format: 'a4', orientation: 'portrait' },
+          ignoreElements: el => el.classList && (
+            el.classList.contains('mode-toggle') ||
+            el.classList.contains('print')
+          ),
+        }).from(document.querySelector('.invoice')).save().then(() => {
+          const a = document.createElement('a');
+          a.href = 'mailto:' + encodeURIComponent(modal.to)
+            + '?subject=' + encodeURIComponent(subject)
+            + '&body='    + encodeURIComponent(modal.body);
+          a.click();
+        });
       },
     },
   });
