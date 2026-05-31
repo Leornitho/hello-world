@@ -376,22 +376,22 @@
 
         </template>
       </div>
-    </div>
 
-    <!-- Email modal -->
-    <div class="email-modal-overlay" v-if="emailModal.visible">
-      <div class="email-modal-box">
-        <h3>Envoyer la facture par email</h3>
-        <div class="email-modal-field"><strong>De :</strong> {{ emailModal.from }}</div>
-        <div class="email-modal-field"><strong>À :</strong> {{ emailModal.to }}</div>
-        <div class="email-modal-field">
-          <strong>Message :</strong>
-          <textarea class="email-modal-textarea" v-model="emailModal.body"></textarea>
-        </div>
-        <p class="email-modal-hint">Le PDF sera téléchargé automatiquement. Veuillez l'attacher à l'email dans votre messagerie.</p>
-        <div class="email-modal-actions">
-          <button class="email-modal-cancel" v-on:click="emailModal.visible = false">Annuler</button>
-          <button class="email-modal-send" v-on:click="confirmSendEmail">Envoyer</button>
+      <!-- Email modal (inside #app so Vue controls it) -->
+      <div class="email-modal-overlay" v-if="emailModal.visible">
+        <div class="email-modal-box">
+          <h3>Envoyer la facture par email</h3>
+          <div class="email-modal-field"><strong>De :</strong> {{ emailModal.from }}</div>
+          <div class="email-modal-field"><strong>À :</strong> {{ emailModal.to }}</div>
+          <div class="email-modal-field">
+            <strong>Message :</strong>
+            <textarea class="email-modal-textarea" v-model="emailModal.body"></textarea>
+          </div>
+          <p class="email-modal-hint">Le PDF sera téléchargé automatiquement. Veuillez l'attacher à l'email dans votre messagerie.</p>
+          <div class="email-modal-actions">
+            <button class="email-modal-cancel" v-on:click="emailModal.visible = false">Annuler</button>
+            <button class="email-modal-send" v-on:click="confirmSendEmail">Envoyer</button>
+          </div>
         </div>
       </div>
     </div>
