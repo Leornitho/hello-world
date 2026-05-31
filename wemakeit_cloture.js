@@ -62,6 +62,9 @@ ready(function() {
   app = new Vue({
     el: '#app',
     data,
+    watch: {
+      selectedId: function() { this.onPersonSelect(); },
+    },
     computed: {
       canSubmit() {
         return this.form.tshirt_size &&

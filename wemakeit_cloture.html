@@ -19,7 +19,7 @@
 
       <div class="field-group">
         <label class="field-label">Votre nom</label>
-        <select v-model="selectedId" class="field-select" @change="onPersonSelect">
+        <select v-model="selectedId" class="field-select">
           <option value="">— Sélectionnez votre nom —</option>
           <option v-for="p in people" :key="p.id" :value="p.id">{{ p.full_name }}</option>
         </select>
