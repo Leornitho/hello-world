@@ -51,11 +51,18 @@ const data = {
 ready(function() {
   grist.ready({ requiredAccess: 'full' });
 
-  grist.onOptions(function() {
+  let initialFetched = false;
+  function doInitialFetch() {
+    if (initialFetched) return;
+    initialFetched = true;
     fetchBackers().then(() => { if (app) app.people = buildPeople(); });
-  });
+  }
+
+  // Fire once Grist channel is ready — first message or timeout, whichever comes first
+  setTimeout(doInitialFetch, 400);
 
   grist.on('message', msg => {
+    doInitialFetch();
     if (msg.dataChange) {
       fetchBackers().then(() => { if (app) app.people = buildPeople(); });
     }
