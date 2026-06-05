@@ -364,6 +364,24 @@ ready(function() {
         const filename = 'facture_' + (inv.invoice_id || 'export') + '.pdf';
         const subject  = 'Facture ' + (inv.invoice_id || '');
 
+        const invoiceEl  = document.querySelector('.invoice');
+        const paySection = document.querySelector('.payment-section');
+
+        // html2pdf maps the element's CSS width to 190 mm (A4 minus 2×10 mm margins).
+        // The usable page height in CSS pixels is therefore (277/190) × element width.
+        // We insert a spacer that fills exactly the gap remaining on the current page
+        // so the payment section always starts at the very top of the next page.
+        const invoiceWidth       = invoiceEl.getBoundingClientRect().width;
+        const usablePageHeightPx = (277 / 190) * invoiceWidth;
+        const offsetFromTop      = paySection.getBoundingClientRect().top
+                                 - invoiceEl.getBoundingClientRect().top;
+        const posOnPage          = offsetFromTop % usablePageHeightPx;
+        const spacerHeight       = posOnPage > 0 ? usablePageHeightPx - posOnPage : 0;
+
+        const spacer = document.createElement('div');
+        spacer.style.cssText = 'height:' + Math.ceil(spacerHeight) + 'px';
+        paySection.parentNode.insertBefore(spacer, paySection);
+
         html2pdf().set({
           margin:      10,
           filename,
@@ -374,15 +392,15 @@ ready(function() {
               el.classList.contains('print')
             ),
           },
-          jsPDF:       { unit: 'mm', format: 'a4', orientation: 'portrait' },
-          pagebreak:   { before: '.payment-section' },
-        }).from(document.querySelector('.invoice')).save().then(() => {
+          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+        }).from(invoiceEl).save().then(() => {
+          spacer.remove();
           const a = document.createElement('a');
           a.href = 'mailto:' + encodeURIComponent(modal.to)
             + '?subject=' + encodeURIComponent(subject)
             + '&body='    + encodeURIComponent(modal.body);
           a.click();
-        });
+        }).catch(() => { spacer.remove(); });
       },
     },
   });

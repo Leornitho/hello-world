@@ -64,8 +64,8 @@
       .email-modal-cancel { background: #e0e0e0; color: #333; }
       .email-modal-cancel:hover { background: #ccc; }
 
-      /* Payment section — never split across pages */
-      .payment-section { page-break-inside: avoid; }
+      /* Payment section — always starts on a fresh page, never split */
+      .payment-section { page-break-before: always; break-before: page; page-break-inside: avoid; }
 
       /* 30-day payment notice */
       .payment-terms {
