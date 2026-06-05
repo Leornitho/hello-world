@@ -49,6 +49,8 @@ const data = {
   totalsPerClient: {},
   totalsPerProduct: {},
   grandTotal: 0,
+  restePerClient: {},
+  grandReste: 0,
 };
 
 function buildPivot() {
@@ -171,7 +173,23 @@ function buildPivot() {
   data.totalsPerClient  = totalsPerClient;
   data.totalsPerProduct = totalsPerProduct;
   data.grandTotal       = grandTotal;
-  data.status           = '';
+
+  // Reste: planned but not yet delivered (capped at 0 when actual >= planned)
+  const restePerClient = {};
+  let grandReste = 0;
+  for (const c of data.clients) restePerClient[c] = 0;
+  for (const p of data.products) {
+    for (const c of data.clients) {
+      const planned = (pivot[p]       && pivot[p][c])       || 0;
+      const actual  = (pivotActual[p] && pivotActual[p][c]) || 0;
+      const reste   = Math.max(0, planned - actual);
+      restePerClient[c] += reste;
+      grandReste        += reste;
+    }
+  }
+  data.restePerClient = restePerClient;
+  data.grandReste     = grandReste;
+  data.status         = '';
 }
 
 ready(function() {

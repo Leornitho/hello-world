@@ -143,6 +143,14 @@ body {
   background: #c8d8e8 !important;
 }
 
+/* Reste row */
+.row-reste td {
+  font-weight: normal !important;
+  background: #f5f0e8 !important;
+  font-style: italic;
+  font-size: 8.5pt;
+}
+
 /* ── Print ─────────────────────────────── */
 @media print {
   body { background: white; }

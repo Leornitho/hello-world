@@ -55,6 +55,11 @@
             <td class="col-total grand-total">{{ fmtGrand() }}</td>
             <td v-for="client in clients" class="col-total">{{ totalClient(client) }}</td>
           </tr>
+          <tr class="row-reste">
+            <td class="col-product">Reste</td>
+            <td class="col-total">{{ fmtTotal(grandReste) }}</td>
+            <td v-for="client in clients" class="col-total">{{ fmtTotal(restePerClient[client] || 0) }}</td>
+          </tr>
         </tfoot>
       </table>
     </div>
