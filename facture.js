@@ -356,7 +356,7 @@ ready(function() {
           body: 'Bonjour, voici la facture pour les dernières commandes, à payer dans les 30 jours. Merci beaucoup, La Ferme Chautems',
         };
       },
-      confirmSendEmail() {
+      async confirmSendEmail() {
         const modal    = Object.assign({}, this.emailModal);
         this.emailModal.visible = false;
 
@@ -367,40 +367,55 @@ ready(function() {
         const invoiceEl  = document.querySelector('.invoice');
         const paySection = document.querySelector('.payment-section');
 
-        // html2pdf maps the element's CSS width to 190 mm (A4 minus 2×10 mm margins).
-        // The usable page height in CSS pixels is therefore (277/190) × element width.
-        // We insert a spacer that fills exactly the gap remaining on the current page
-        // so the payment section always starts at the very top of the next page.
-        const invoiceWidth       = invoiceEl.getBoundingClientRect().width;
-        const usablePageHeightPx = (277 / 190) * invoiceWidth;
-        const offsetFromTop      = paySection.getBoundingClientRect().top
-                                 - invoiceEl.getBoundingClientRect().top;
-        const posOnPage          = offsetFromTop % usablePageHeightPx;
-        const spacerHeight       = posOnPage > 0 ? usablePageHeightPx - posOnPage : 0;
+        const MARGIN   = 10;
+        const USABLE_W = 190; // mm  (210 − 2×10)
+        const USABLE_H = 277; // mm  (297 − 2×10)
 
-        const spacer = document.createElement('div');
-        spacer.style.cssText = 'height:' + Math.ceil(spacerHeight) + 'px';
-        paySection.parentNode.insertBefore(spacer, paySection);
+        const ignoreEl = el => el.classList && (
+          el.classList.contains('mode-toggle') ||
+          el.classList.contains('print')
+        );
 
-        html2pdf().set({
-          margin:      10,
-          filename,
-          html2canvas: {
+        try {
+          // Capture invoice content with payment section hidden
+          paySection.style.display = 'none';
+          const c1 = await html2canvas(invoiceEl, {
+            scale: 2, useCORS: true, logging: false, ignoreElements: ignoreEl,
+          });
+          paySection.style.display = '';
+
+          // Capture payment section separately
+          const c2 = await html2canvas(paySection, {
             scale: 2, useCORS: true, logging: false,
-            ignoreElements: el => el.classList && (
-              el.classList.contains('mode-toggle') ||
-              el.classList.contains('print')
-            ),
-          },
-          jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
-        }).from(invoiceEl).save().then(() => {
-          spacer.remove();
+          });
+
+          const { jsPDF } = window.jspdf;
+          const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
+
+          // Lay invoice content across as many A4 pages as needed
+          const h1   = c1.height / c1.width * USABLE_W;
+          const img1 = c1.toDataURL('image/jpeg', 0.95);
+          for (let page = 0; page * USABLE_H < h1; page++) {
+            if (page > 0) pdf.addPage();
+            pdf.addImage(img1, 'JPEG', MARGIN, MARGIN - page * USABLE_H, USABLE_W, h1);
+          }
+
+          // Payment section always starts on a fresh page
+          pdf.addPage();
+          const h2 = c2.height / c2.width * USABLE_W;
+          pdf.addImage(c2.toDataURL('image/jpeg', 0.95), 'JPEG', MARGIN, MARGIN, USABLE_W, h2);
+
+          pdf.save(filename);
+
           const a = document.createElement('a');
           a.href = 'mailto:' + encodeURIComponent(modal.to)
             + '?subject=' + encodeURIComponent(subject)
             + '&body='    + encodeURIComponent(modal.body);
           a.click();
-        }).catch(() => { spacer.remove(); });
+        } catch(e) {
+          paySection.style.display = '';
+          console.error('PDF error:', e);
+        }
       },
     },
   });
