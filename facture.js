@@ -376,18 +376,38 @@ ready(function() {
           el.classList.contains('print')
         );
 
+        // Render at a fixed A4 width so the PDF looks the same regardless of window size.
+        const RENDER_PX = 794; // A4 at 96 dpi
+
+        const fixWidth = el => {
+          el._savedWidth    = el.style.width;
+          el._savedMaxWidth = el.style.maxWidth;
+          el.style.width    = RENDER_PX + 'px';
+          el.style.maxWidth = 'none';
+          void el.offsetWidth; // force reflow
+        };
+        const restoreWidth = el => {
+          el.style.width    = el._savedWidth;
+          el.style.maxWidth = el._savedMaxWidth;
+        };
+
         try {
           // Capture invoice content with payment section hidden
           paySection.style.display = 'none';
+          fixWidth(invoiceEl);
           const c1 = await html2canvas(invoiceEl, {
-            scale: 2, useCORS: true, logging: false, ignoreElements: ignoreEl,
+            scale: 2, useCORS: true, logging: false,
+            windowWidth: RENDER_PX, ignoreElements: ignoreEl,
           });
+          restoreWidth(invoiceEl);
           paySection.style.display = '';
 
           // Capture payment section separately
+          fixWidth(paySection);
           const c2 = await html2canvas(paySection, {
-            scale: 2, useCORS: true, logging: false,
+            scale: 2, useCORS: true, logging: false, windowWidth: RENDER_PX,
           });
+          restoreWidth(paySection);
 
           const { jsPDF } = window.jspdf;
           const pdf = new jsPDF({ unit: 'mm', format: 'a4', orientation: 'portrait' });
@@ -413,6 +433,8 @@ ready(function() {
             + '&body='    + encodeURIComponent(modal.body);
           a.click();
         } catch(e) {
+          restoreWidth(invoiceEl);
+          restoreWidth(paySection);
           paySection.style.display = '';
           console.error('PDF error:', e);
         }
