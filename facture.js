@@ -375,7 +375,7 @@ ready(function() {
             ),
           },
           jsPDF:       { unit: 'mm', format: 'a4', orientation: 'portrait' },
-          pagebreak:   { before: '.swiss-qr-bill' },
+          pagebreak:   { before: '.payment-section' },
         }).from(document.querySelector('.invoice')).save().then(() => {
           const a = document.createElement('a');
           a.href = 'mailto:' + encodeURIComponent(modal.to)

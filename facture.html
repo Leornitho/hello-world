@@ -64,6 +64,9 @@
       .email-modal-cancel { background: #e0e0e0; color: #333; }
       .email-modal-cancel:hover { background: #ccc; }
 
+      /* Payment section — never split across pages */
+      .payment-section { page-break-inside: avoid; }
+
       /* 30-day payment notice */
       .payment-terms {
         margin-top: 0.8em;
@@ -320,7 +323,8 @@
             <div class="thanks">Merci pour votre commande!</div>
           </div>
 
-          <!-- Payment terms -->
+          <!-- Payment section: keep entirely on one page -->
+          <div class="payment-section">
           <p class="payment-terms">Paiement dû dans les 30 jours suivant la date de facturation.</p>
 
           <!-- Swiss QR bill (SIX standard layout, adapted from multisum/html-swiss-qr-bill) -->
@@ -368,6 +372,7 @@
 
             </div>
           </div>
+          </div><!-- /.payment-section -->
 
           <!-- Print button -->
           <div class="print">
