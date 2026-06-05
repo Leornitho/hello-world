@@ -302,7 +302,8 @@ ready(function() {
       { name: 'detailed_orders', type: 'RefList' },
       { name: 'client_note',      type: 'Text'    },
       { name: 'reference',        type: 'Text'    },
-      { name: 'invoice_file_name', type: 'Text'   },
+      { name: 'invoice_file_name',    type: 'Text'   },
+      { name: 'file_destination_url', type: 'Text'   },
     ],
   });
 
@@ -426,7 +427,35 @@ ready(function() {
           const h2 = c2.height / c2.width * USABLE_W;
           pdf.addImage(c2.toDataURL('image/jpeg', 0.95), 'JPEG', MARGIN, MARGIN, USABLE_W, h2);
 
-          pdf.save(filename);
+          // Get PDF as blob so we can both download and upload
+          const pdfBlob = pdf.output('blob');
+
+          // Local download
+          const dlUrl  = URL.createObjectURL(pdfBlob);
+          const dlLink = document.createElement('a');
+          dlLink.href     = dlUrl;
+          dlLink.download = filename;
+          dlLink.click();
+          setTimeout(() => URL.revokeObjectURL(dlUrl), 2000);
+
+          // Upload to kDrive if a destination URL is configured
+          const destUrl = inv.file_destination_url;
+          if (destUrl) {
+            const m = destUrl.match(/collaborate\/(\d+)\/([0-9a-f-]+)/i);
+            if (m) {
+              const driveId = m[1];
+              const token   = m[2];
+              const form    = new FormData();
+              form.append('file', pdfBlob, filename);
+              fetch(
+                'https://api.infomaniak.com/2/drive/' + driveId +
+                '/public/share/' + token + '/files',
+                { method: 'POST', body: form }
+              ).then(r => {
+                if (!r.ok) console.warn('kDrive upload HTTP', r.status);
+              }).catch(e => console.error('kDrive upload failed:', e));
+            }
+          }
 
           const a = document.createElement('a');
           a.href = 'mailto:' + encodeURIComponent(modal.to)
