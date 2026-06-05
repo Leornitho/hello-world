@@ -45,6 +45,7 @@ const data = {
   notes: {},
   pivotNotes: {},
   pivotStatus: {},
+  productRowStatus: {},
   totalsPerClient: {},
   totalsPerProduct: {},
   grandTotal: 0,
@@ -131,6 +132,24 @@ function buildPivot() {
     }
   }
   data.pivotStatus = pivotStatus;
+
+  // Product row status: green if every client either has actual >= planned > 0,
+  // or has no planned quantity at all (nothing written). Red overrides everything.
+  const productRowStatus = {};
+  for (const p of Array.from(productSet)) {
+    let allOk = true;
+    for (const c of Array.from(clientSet)) {
+      const status  = (pivotStatus[p] && pivotStatus[p][c]) || '';
+      const planned = (pivot[p]       && pivot[p][c])       || 0;
+      const actual  = (pivotActual[p] && pivotActual[p][c]) || 0;
+      if (status === 'cell-red' || (planned > 0 && actual < planned)) {
+        allOk = false;
+        break;
+      }
+    }
+    productRowStatus[p] = allOk ? 'cell-green' : '';
+  }
+  data.productRowStatus = productRowStatus;
 
   // Totals
   const totalsPerClient  = {};
