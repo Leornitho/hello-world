@@ -300,8 +300,9 @@ ready(function() {
       { name: 'customer',        type: 'Int'     },
       { name: 'detailed_sales',  type: 'RefList' },
       { name: 'detailed_orders', type: 'RefList' },
-      { name: 'client_note',     type: 'Text'    },
-      { name: 'reference',       type: 'Text'    },
+      { name: 'client_note',      type: 'Text'    },
+      { name: 'reference',        type: 'Text'    },
+      { name: 'invoice_file_name', type: 'Text'   },
     ],
   });
 
@@ -361,7 +362,7 @@ ready(function() {
         this.emailModal.visible = false;
 
         const inv      = this.invoice;
-        const filename = 'facture_' + (inv.invoice_id || 'export') + '.pdf';
+        const filename = (inv.invoice_file_name || ('facture_' + (inv.invoice_id || 'export'))) + '.pdf';
         const subject  = 'Facture ' + (inv.invoice_id || '');
 
         const invoiceEl  = document.querySelector('.invoice');
