@@ -438,22 +438,44 @@ ready(function() {
           dlLink.click();
           setTimeout(() => URL.revokeObjectURL(dlUrl), 2000);
 
-          // Upload to kDrive if a destination URL is configured
+          // Upload to kDrive dropbox if a destination URL is configured
           const destUrl = inv.file_destination_url;
           if (destUrl) {
             const m = destUrl.match(/collaborate\/(\d+)\/([0-9a-f-]+)/i);
             if (m) {
               const driveId = m[1];
               const token   = m[2];
-              const form    = new FormData();
-              form.append('file', pdfBlob, filename);
-              fetch(
-                'https://api.infomaniak.com/2/drive/' + driveId +
-                '/public/share/' + token + '/files',
-                { method: 'POST', body: form }
-              ).then(r => {
-                if (!r.ok) console.warn('kDrive upload HTTP', r.status);
-              }).catch(e => console.error('kDrive upload failed:', e));
+              (async () => {
+                try {
+                  // SHA-512 hash of the file content (required by kDrive)
+                  const buf     = await pdfBlob.arrayBuffer();
+                  const hashBuf = await crypto.subtle.digest('SHA-512', buf);
+                  const hash    = Array.from(new Uint8Array(hashBuf))
+                                    .map(b => b.toString(16).padStart(2, '0')).join('');
+                  // Random client token (UUID v4)
+                  const clientToken = ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
+                    (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16));
+                  const params = new URLSearchParams({
+                    conflict:          'rename',
+                    directory_id:      '1',
+                    directory_path:    '',
+                    file_name:         filename,
+                    total_size:        String(pdfBlob.size),
+                    last_modified_at:  String(Math.floor(Date.now() / 1000)),
+                    total_chunk_hash:  'sha512:' + hash,
+                    chunk_number:      '1',
+                    chunk_size:        String(pdfBlob.size),
+                    client_token:      clientToken,
+                  });
+                  const r = await fetch(
+                    'https://kdrive.infomaniak.com/2/app/' + driveId +
+                    '/dropbox/' + token + '/upload?' + params,
+                    { method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: pdfBlob }
+                  );
+                  if (!r.ok) r.text().then(t => console.warn('kDrive upload HTTP', r.status, t));
+                  else console.log('kDrive upload OK');
+                } catch(e) { console.error('kDrive upload failed:', e); }
+              })();
             }
           }
 
