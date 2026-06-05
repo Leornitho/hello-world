@@ -303,7 +303,6 @@ ready(function() {
       { name: 'client_note',      type: 'Text'    },
       { name: 'reference',        type: 'Text'    },
       { name: 'invoice_file_name',    type: 'Text'   },
-      { name: 'file_destination_url', type: 'Text'   },
     ],
   });
 
@@ -427,58 +426,8 @@ ready(function() {
           const h2 = c2.height / c2.width * USABLE_W;
           pdf.addImage(c2.toDataURL('image/jpeg', 0.95), 'JPEG', MARGIN, MARGIN, USABLE_W, h2);
 
-          // Get PDF as blob so we can both download and upload
-          const pdfBlob = pdf.output('blob');
-
-          // Local download
-          const dlUrl  = URL.createObjectURL(pdfBlob);
-          const dlLink = document.createElement('a');
-          dlLink.href     = dlUrl;
-          dlLink.download = filename;
-          dlLink.click();
-          setTimeout(() => URL.revokeObjectURL(dlUrl), 2000);
-
-          // Upload to kDrive dropbox if a destination URL is configured
-          const destUrl = inv.file_destination_url;
-          if (destUrl) {
-            const m = destUrl.match(/collaborate\/(\d+)\/([0-9a-f-]+)/i);
-            if (m) {
-              const driveId = m[1];
-              const token   = m[2];
-              (async () => {
-                try {
-                  // SHA-512 hash of the file content (required by kDrive)
-                  const buf     = await pdfBlob.arrayBuffer();
-                  const hashBuf = await crypto.subtle.digest('SHA-512', buf);
-                  const hash    = Array.from(new Uint8Array(hashBuf))
-                                    .map(b => b.toString(16).padStart(2, '0')).join('');
-                  // Random client token (UUID v4)
-                  const clientToken = ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
-                    (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16));
-                  const params = new URLSearchParams({
-                    share_link_token:  token,
-                    conflict:          'rename',
-                    directory_path:    '/',
-                    file_name:         filename,
-                    total_size:        String(pdfBlob.size),
-                    last_modified_at:  String(Math.floor(Date.now() / 1000)),
-                    total_chunk_hash:  'sha512:' + hash,
-                    chunk_number:      '1',
-                    chunk_size:        String(pdfBlob.size),
-                    client_token:      clientToken,
-                  });
-                  // Use the public REST API (CORS-friendly) instead of the internal web-app endpoint
-                  const r = await fetch(
-                    'https://api.infomaniak.com/2/drive/' + driveId +
-                    '/files/upload?' + params,
-                    { method: 'POST', headers: { 'Content-Type': 'application/octet-stream' }, body: pdfBlob }
-                  );
-                  if (!r.ok) r.text().then(t => console.warn('kDrive upload HTTP', r.status, t));
-                  else console.log('kDrive upload OK');
-                } catch(e) { console.error('kDrive upload failed:', e); }
-              })();
-            }
-          }
+          // Download PDF locally
+          pdf.save(filename);
 
           const a = document.createElement('a');
           a.href = 'mailto:' + encodeURIComponent(modal.to)
