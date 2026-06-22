@@ -41,7 +41,10 @@
         </thead>
         <tbody>
           <tr v-for="product in products">
-            <td class="col-product" :class="productRowStatus[product]">{{ product }}</td>
+            <td class="col-product" :class="productRowStatus[product]">
+              {{ product }}
+              <div v-if="productBundle[product]" class="cell-note">({{ productBundle[product] }})</div>
+            </td>
             <td class="col-total">{{ totalProduct(product) }}</td>
             <td v-for="client in clients" class="col-qty" :class="pivotStatus[product] && pivotStatus[product][client]">
               {{ qty(product, client) }}

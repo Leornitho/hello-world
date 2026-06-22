@@ -46,6 +46,7 @@ const data = {
   pivotNotes: {},
   pivotStatus: {},
   productRowStatus: {},
+  productBundle: {},
   totalsPerClient: {},
   totalsPerProduct: {},
   grandTotal: 0,
@@ -73,13 +74,14 @@ function buildPivot() {
   if (!data.selectedDate) { data.status = 'Aucune donnée disponible'; return; }
 
   // Build pivot for selected date
-  const productSet = new Set();
-  const clientSet  = new Set();
+  const productSet    = new Set();
+  const clientSet     = new Set();
   const pivot           = {};
   const pivotMax        = {};
   const pivotActual     = {};
   const notes           = {};
   const noteAccumulator = {}; // product -> client -> Set of note strings
+  const productBundle   = {}; // product -> pce_per_bundle label
 
   for (let i = 0; i < t.id.length; i++) {
     if (!t.harvest_date[i]) continue;
@@ -105,6 +107,9 @@ function buildPivot() {
       if (!noteAccumulator[product][client]) noteAccumulator[product][client] = new Set();
       noteAccumulator[product][client].add(rowNote);
     }
+    if (!productBundle[product] && t.pce_per_bundle && t.pce_per_bundle[i]) {
+      productBundle[product] = String(t.pce_per_bundle[i]).trim();
+    }
   }
 
   data.products = Array.from(productSet).sort((a, b) => a.localeCompare(b, 'fr'));
@@ -120,7 +125,8 @@ function buildPivot() {
         pivotNotes[p][c] = Array.from(noteAccumulator[p][c]).join(' / ');
     }
   }
-  data.pivotNotes = pivotNotes;
+  data.pivotNotes    = pivotNotes;
+  data.productBundle = productBundle;
 
   const pivotStatus = {};
   for (const p of Array.from(productSet)) {
