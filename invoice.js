@@ -155,7 +155,8 @@ function getDetailsForOrder(orderId) {
       });
     }
   }
-  return rows;
+  return rows.sort((a, b) =>
+    String(a.product_format_clientside || '').localeCompare(String(b.product_format_clientside || ''), 'fr'));
 }
 
 Vue.filter('currency', formatNumberAsCHF)

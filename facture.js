@@ -102,20 +102,23 @@ function getRowById(table, id) {
 
 function getDetailedSalesForInvoice(rawList) {
   if (!Array.isArray(rawList) || rawList.length === 0) return [];
+  const sortByProduct = arr => arr.sort((a, b) =>
+    String(a.product_format_clientside || '').localeCompare(String(b.product_format_clientside || ''), 'fr'));
+
   if (typeof rawList[0] === 'object' && rawList[0] !== null) {
     // Already resolved objects — extract the fields we need.
-    return rawList.map(r => ({
+    return sortByProduct(rawList.map(r => ({
       product_format_clientside: r.product_format_clientside,
       unit_price_final:          r.H_price_before_manual_discount ?? r.unit_price_final,
       UI_price_format:           r.UI_price_format || null,
       discount_manual:           r.discount_manual || null,
       quantity:                  r.quantity,
       total_price_final:         r.total_price_final,
-    }));
+    })));
   }
   // Integer row IDs — look up in salesMergedTable.
   if (!salesMergedTable) return [];
-  return rawList.filter(v => typeof v === 'number' && v > 0).map(id => {
+  return sortByProduct(rawList.filter(v => typeof v === 'number' && v > 0).map(id => {
     const r = getRowById(salesMergedTable, id);
     if (!r) return null;
     return {
@@ -126,7 +129,7 @@ function getDetailedSalesForInvoice(rawList) {
       quantity:                  r.quantity,
       total_price_final:         r.total_price_final,
     };
-  }).filter(Boolean);
+  }).filter(Boolean));
 }
 
 function getDetailedOrdersForInvoice(rawList) {
