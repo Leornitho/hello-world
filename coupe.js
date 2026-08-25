@@ -210,6 +210,11 @@ ready(function() {
   app = new Vue({
     el: '#app',
     data,
+    computed: {
+      productsWithPlanned() {
+        return this.products.filter(p => (this.totalsPerProduct[p] || 0) > 0);
+      },
+    },
     watch: {
       selectedDate: function() { buildPivot(); }
     },

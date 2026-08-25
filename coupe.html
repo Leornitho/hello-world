@@ -40,7 +40,7 @@
           </tr>
         </thead>
         <tbody>
-          <tr v-for="product in products">
+          <tr v-for="product in productsWithPlanned">
             <td class="col-product" :class="productRowStatus[product]">
               {{ product }}
               <div v-if="productBundle[product]" class="cell-note">({{ productBundle[product] }})</div>

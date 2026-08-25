@@ -51,7 +51,7 @@ body {
 /* ── Pivot table ───────────────────────── */
 .pivot-table {
   border-collapse: collapse;
-  width: 100%;
+  width: auto;
   white-space: nowrap;
 }
 
@@ -75,14 +75,12 @@ body {
 /* Product column */
 .col-product {
   text-align: left;
-  min-width: 160px;
   white-space: normal;
 }
 
 /* Quantity cells */
 .col-qty {
   text-align: center;
-  min-width: 44px;
 }
 .col-qty:empty { color: #bbb; }
 
@@ -91,7 +89,6 @@ body {
   text-align: center;
   font-weight: bold;
   background: #f0f0f0;
-  min-width: 44px;
 }
 
 /* Cell status colours */
